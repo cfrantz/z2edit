@@ -4364,31 +4364,31 @@ ProjectileOamOffsets:
 ; ---------------------------------------------------------------------------
 Enemies_Update:
     lda     linkMode                ; $D5A7
-    beq     @done                   ; $D5A9
-    inc     oamRotation             ; $D5AB
-    ldx     #$05                    ; $D5AE
+    beq     @done                   ; $D5A9  Link still entering: no enemies yet
+    inc     oamRotation             ; $D5AB  a different rotation each frame
+    ldx     #$05                    ; $D5AE  enemy 5 down to 0
 
 @loop:
     stx     currentObject           ; $D5B0
     lda     oamRotation             ; $D5B2
-    cmp     #$06                    ; $D5B5
-    bcc     @loc_D5BE               ; $D5B7
+    cmp     #$06                    ; $D5B5  0-5
+    bcc     @assignSlots            ; $D5B7
     lda     #$00                    ; $D5B9
-    sta     oamRotation             ; $D5BB
+    sta     oamRotation             ; $D5BB  wrap around
 
-@loc_D5BE:
+@assignSlots:
     clc                             ; $D5BE
-    adc     currentObject           ; $D5BF
+    adc     currentObject           ; $D5BF  + the enemy: 0-10
     tay                             ; $D5C1
-    lda     EnemyOamOffsets,y       ; $D5C2
+    lda     EnemyOamOffsets,y       ; $D5C2  its sprites this frame
     sta     objOamOffset+1,x        ; $D5C5
-    lda     ProjectileOamOffsets,y  ; $D5C7
+    lda     ProjectileOamOffsets,y  ; $D5C7  and its projectile's sprite
     sta     objOamOffset+7,x        ; $D5CA
     jsr     Enemy_Update            ; $D5CC
-    ldx     currentObject           ; $D5CF
+    ldx     currentObject           ; $D5CF  (x clobbered)
     jsr     Projectile_Update       ; $D5D1
     ldx     currentObject           ; $D5D4
-    dex                             ; $D5D6
+    dex                             ; $D5D6  next enemy
     bpl     @loop                   ; $D5D7
 
 @done:
@@ -8949,6 +8949,11 @@ Obj_GetBgTile:
     sta     temp3                   ; $EB22
     rts                             ; $EB24
 
+; Link's tiles: two rows of three sprites per pose, as he faces left
+; (Link_DrawSprites mirrors them for the right); $F5 is blank, and its
+; sprite is hidden.  LinkBodyFrames gives each pose's offset.  Bytes 42-47
+; and 60-77 belong to no pose, and 102-107 are pose $0D's (holding an
+; item up in a town), which the movies never show.
 LinkSpriteTiles:
     .byte   $F5                                                             ; $EB25
     .byte   $00                                                             ; $EB26
@@ -8967,6 +8972,7 @@ LinkSpriteTiles:
     .byte   $F5, $21, $23, $F5, $25, $27                                    ; $EB8B
     .byte   $F5, $81, $83, $F5, $AD, $AF                                    ; $EB91
 
+; Offset of each pose's tiles in LinkSpriteTiles, by LINK_POSE_* (0-$0E).
 LinkBodyFrames:
     .byte   $00, $06, $0C, $18, $1E, $24, $12, $30, $36, $54, $4E, $5A, $60 ; $EB97
 ; (unreferenced: $EBA4-$EBA4, 1 bytes)
@@ -8975,13 +8981,17 @@ LinkBodyFrames:
 ; (unreferenced: $EBA6-$EBAB, 6 bytes)
     .byte   $10, $0C, $00, $04, $04                                         ; $EBA6
 
+; By linkWalkDir (1 right, 2 left): the stroke's sword sprite X, from
+; Link's X + 12: +20 right, -20 left (entry 2 is SwordXOffsets' entry 0).
 LinkBodyXOffsets:
     .byte   $00                                                             ; $EBAB
     .byte   $14                                                             ; $EBAC
 
+; By linkWalkDir (1 right, 2 left): the thrusts' sword X from swordBaseX.
 SwordXOffsets:
     .byte   $EC, $0C, $08                                                   ; $EBAD
 
+; The fairy's bob, 0-4 pixels, by frameCounter / 8 (and wading Link's).
 FairyYOffsets:
     .byte   $01, $02, $03, $04, $03, $02, $01, $00                          ; $EBB0
 
@@ -8993,35 +9003,35 @@ FairyYOffsets:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_DrawFairy:
-    lda     drawOffscreen           ; $EBB8
+    lda     drawOffscreen           ; $EBB8  off screen (probe points 1-2)?
     and     #$06                    ; $EBBA
-    bne     Link_DrawDone           ; $EBBC
-    lda     frameCounter            ; $EBBE
+    bne     Link_DrawDone           ; $EBBC  yes: not drawn
+    lda     frameCounter            ; $EBBE  frameCounter / 8:
     and     #$38                    ; $EBC0
     lsr     a                       ; $EBC2
     lsr     a                       ; $EBC3
     lsr     a                       ; $EBC4
-    tay                             ; $EBC5
-    lda     objY                    ; $EBC6
+    tay                             ; $EBC5  the bob, every 8 frames
+    lda     objY                    ; $EBC6  Y + 8 +
     adc     #$08                    ; $EBC8
-    adc     FairyYOffsets,y         ; $EBCA
-    sta     oamBuffer+8             ; $EBCD
-    lda     drawScreenX             ; $EBD0
+    adc     FairyYOffsets,y         ; $EBCA  0-4 pixels
+    sta     oamBuffer+8             ; $EBCD  one sprite, in Link's first slot
+    lda     drawScreenX             ; $EBD0  X + 12
     adc     #$0C                    ; $EBD2
     sta     oamBuffer+11            ; $EBD4
-    lda     frameCounter            ; $EBD7
+    lda     frameCounter            ; $EBD7  wings: tile $68 or $6A,
     and     #$04                    ; $EBD9
     lsr     a                       ; $EBDB
-    adc     #$68                    ; $EBDC
+    adc     #$68                    ; $EBDC  every 4 frames
     sta     oamBuffer+9             ; $EBDE
-    ldy     #$01                    ; $EBE1
-    lda     timerFast+TIMER_LINK_HURT ; $EBE3
-    beq     @loc_EBEC               ; $EBE6
-    lsr     a                       ; $EBE8
+    ldy     #$01                    ; $EBE1  palette 1,
+    lda     timerFast+TIMER_LINK_HURT ; $EBE3  or while hurt
+    beq     @setAttr                ; $EBE6
+    lsr     a                       ; $EBE8  cycling every 2 frames
     and     #$03                    ; $EBE9
     tay                             ; $EBEB
 
-@loc_EBEC:
+@setAttr:
     sty     oamBuffer+10            ; $EBEC
 
 ; ---------------------------------------------------------------------------
@@ -9034,14 +9044,24 @@ Link_DrawFairy:
 Link_DrawDone:
     rts                             ; $EBEF
 
+; ---------------------------------------------------------------------------
+; Link_Draw
+;
+; Draw Link: his six sprites at oamBuffer $08 (two rows of three, from his
+; pose), the stroke's sword sprite after them (oamBuffer $20, shared with
+; the first enemy projectile slot), or the fairy; and set the sword's hit
+; position.  Link_DrawBody draws Dark Link the same way (swordOwner 1).
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 Link_Draw:
-    lda     linkTalking             ; $EBF0
+    lda     linkTalking             ; $EBF0  talking: drawn by the town bank
     bne     Link_DrawDone           ; $EBF3
     ldx     #$00                    ; $EBF5
-    stx     swordOwner              ; $EBF7
-    lda     #$08                    ; $EBF9
+    stx     swordOwner              ; $EBF7  drawing Link (not Dark Link)
+    lda     #$08                    ; $EBF9  his sprites: oamBuffer $08-$1F
     sta     objOamOffset            ; $EBFB
-    ldy     #$00                    ; $EBFD
+    ldy     #$00                    ; $EBFD  draw category 0
     jsr     Obj_ComputeScreenPos    ; $EBFF
 
 ; ---------------------------------------------------------------------------
@@ -9052,31 +9072,31 @@ Link_Draw:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_DrawBody:
-    ldx     swordOwner              ; $EC02
-    lda     objY,x                  ; $EC04
+    ldx     swordOwner              ; $EC02  0 = Link, 1 = Dark Link
+    lda     objY,x                  ; $EC04  Y of the top row
     cpx     #$00                    ; $EC06
-    bne     @loc_EC17               ; $EC08
+    bne     @setY                   ; $EC08  Dark Link: as is
     ldy     linkJumpState           ; $EC0A
-    beq     @loc_EC17               ; $EC0D
+    beq     @setY                   ; $EC0D  on the ground
     ldy     objState,x              ; $EC0F
-    cpy     #$06                    ; $EC11
-    bne     @loc_EC17               ; $EC13
-    sbc     #$04                    ; $EC15
+    cpy     #LINK_POSE_CROUCH       ; $EC11  crouching in the air:
+    bne     @setY                   ; $EC13
+    sbc     #$04                    ; $EC15  4 pixels higher (carry set)
 
-@loc_EC17:
-    sta     temp0                   ; $EC17
-    lda     #$F8                    ; $EC19
+@setY:
+    sta     temp0                   ; $EC17  top row's Y
+    lda     #$F8                    ; $EC19  no sword unless a stroke draws one
     sta     swordY,x                ; $EC1B
     lda     linkFairy               ; $EC1E
-    bne     Link_DrawFairy          ; $EC20
-    lda     linkSlowed              ; $EC22
-    beq     @loc_EC40               ; $EC25
+    bne     Link_DrawFairy          ; $EC20  the fairy instead
+    lda     linkSlowed              ; $EC22  wading:
+    beq     @draw                   ; $EC25
     lda     objY                    ; $EC27
-    bpl     @loc_EC40               ; $EC29
+    bpl     @draw                   ; $EC29  above Y $80: no
     lda     objXVelocity            ; $EC2B
-    beq     @loc_EC40               ; $EC2D
+    beq     @draw                   ; $EC2D  standing still: no
 ; (code below not executed in the test movies)
-    lda     frameCounter            ; $EC2F
+    lda     frameCounter            ; $EC2F  walking: bob by frameCounter / 16
     lsr     a                       ; $EC31
     lsr     a                       ; $EC32
     lsr     a                       ; $EC33
@@ -9085,47 +9105,47 @@ Link_DrawBody:
     tay                             ; $EC37
     lda     temp0                   ; $EC38
     sec                             ; $EC3A
-    sbc     FairyYOffsets,y         ; $EC3B
+    sbc     FairyYOffsets,y         ; $EC3B  0-4 pixels up
     sta     temp0                   ; $EC3E
 ; (end of code not executed in the test movies)
 
-@loc_EC40:
-    ldy     objOamOffset,x          ; $EC40
-    lda     objState,x              ; $EC42
+@draw:
+    ldy     objOamOffset,x          ; $EC40  the owner's sprites
+    lda     objState,x              ; $EC42  pose
     tax                             ; $EC44
-    lda     LinkBodyFrames,x        ; $EC45
+    lda     LinkBodyFrames,x        ; $EC45  its frame in LinkSpriteTiles
     tax                             ; $EC48
-    lda     drawOffscreen           ; $EC49
+    lda     drawOffscreen           ; $EC49  off screen vertically?
     and     #$C0                    ; $EC4B
-    bne     @loc_EC62               ; $EC4D
-    lda     linkSlowed              ; $EC4F
+    bne     @bottomRow              ; $EC4D  skip the row (Link's flags, even for Dark Link)
+    lda     linkSlowed              ; $EC4F  top row: behind the background
     pha                             ; $EC52
-    lda     chimneyTimer            ; $EC53
-    bne     @loc_EC5B               ; $EC56
+    lda     chimneyTimer            ; $EC53  only down a chimney
+    bne     @topRow                 ; $EC56
     sta     linkSlowed              ; $EC58
 
-@loc_EC5B:
-    jsr     Link_DrawSprites        ; $EC5B
+@topRow:
+    jsr     Link_DrawSprites        ; $EC5B  top row
     pla                             ; $EC5E
     sta     linkSlowed              ; $EC5F
 
-@loc_EC62:
-    lda     drawOffscreen           ; $EC62
+@bottomRow:
+    lda     drawOffscreen           ; $EC62  off screen vertically: skip
     and     #$30                    ; $EC64
-    bne     @loc_EC6B               ; $EC66
-    jsr     Link_DrawSprites        ; $EC68
+    bne     @hideBlanks             ; $EC66
+    jsr     Link_DrawSprites        ; $EC68  bottom row
 
-@loc_EC6B:
-    ldy     #$14                    ; $EC6B
+@hideBlanks:
+    ldy     #$14                    ; $EC6B  Link's 6 sprites (not Dark Link's):
 
 @loop:
     lda     oamBuffer+9,y           ; $EC6D
-    cmp     #$F5                    ; $EC70
-    bne     @loc_EC79               ; $EC72
-    lda     #$F8                    ; $EC74
+    cmp     #$F5                    ; $EC70  the blank tile $F5?
+    bne     @nextSprite             ; $EC72
+    lda     #$F8                    ; $EC74  hide the sprite
     sta     oamBuffer+8,y           ; $EC76
 
-@loc_EC79:
+@nextSprite:
     dey                             ; $EC79
     dey                             ; $EC7A
     dey                             ; $EC7B
@@ -9133,71 +9153,71 @@ Link_DrawBody:
     bpl     @loop                   ; $EC7D
     ldx     swordOwner              ; $EC7F
     ldy     objOamOffset,x          ; $EC81
-    lda     oamBuffer+3,y           ; $EC83
-    sta     swordBaseX,x            ; $EC86
+    lda     oamBuffer+3,y           ; $EC83  the first sprite's X
+    sta     swordBaseX,x            ; $EC86  for Sword_UpdatePosition
     lda     objState,x              ; $EC88
-    cmp     #$0B                    ; $EC8A
-    bne     @loc_EC96               ; $EC8C
-    lda     #$40                    ; $EC8E
+    cmp     #LINK_POSE_ENDING       ; $EC8A  pose $0B (after the Dark Link fight):
+    bne     @sword                  ; $EC8C
+    lda     #$40                    ; $EC8E  the right column mirrored
     sta     oamBuffer+10,y          ; $EC90
     sta     oamBuffer+22,y          ; $EC93
 
-@loc_EC96:
+@sword:
     pha                             ; $EC96
     lda     linkWalkDir,x           ; $EC97
     tax                             ; $EC99
-    dex                             ; $EC9A
+    dex                             ; $EC9A  (unused: x is loaded again below)
     pla                             ; $EC9B
-    cmp     #$05                    ; $EC9C
-    bne     @loc_ECD0               ; $EC9E
-    lda     #$32                    ; $ECA0
+    cmp     #LINK_POSE_STROKE       ; $EC9C  pose 5, the standing stroke:
+    bne     @crouchStroke           ; $EC9E
+    lda     #$32                    ; $ECA0  the sword sprite (7th): tile $32,
     sta     oamBuffer+25,y          ; $ECA2
     ldx     swordOwner              ; $ECA5
     lda     objY,x                  ; $ECA7
-    sta     oamBuffer+24,y          ; $ECA9
+    sta     oamBuffer+24,y          ; $ECA9  at his top row
 
-@loc_ECAC:
+@swordX:
     lda     drawScreenX,x           ; $ECAC
     pha                             ; $ECAE
     lda     linkWalkDir,x           ; $ECAF
     tax                             ; $ECB1
     pla                             ; $ECB2
     clc                             ; $ECB3
-    adc     #$0C                    ; $ECB4
+    adc     #$0C                    ; $ECB4  X + 12, then
     clc                             ; $ECB6
-    adc     LinkBodyXOffsets,x      ; $ECB7
+    adc     LinkBodyXOffsets,x      ; $ECB7  + 20 right, - 20 left
     sta     oamBuffer+27,y          ; $ECBA
-    php                             ; $ECBD
+    php                             ; $ECBD  carry: wrapped past the edge
     dex                             ; $ECBE
-    beq     @loc_ECC5               ; $ECBF
+    beq     @checkWrap              ; $ECBF  facing left:
     pla                             ; $ECC1
-    eor     #$01                    ; $ECC2
+    eor     #$01                    ; $ECC2  invert: set if it went below 0
     pha                             ; $ECC4
 
-@loc_ECC5:
+@checkWrap:
     plp                             ; $ECC5
-    bcc     @loc_ECCD               ; $ECC6
-    lda     #$F8                    ; $ECC8
+    bcc     @hitPosition            ; $ECC6  still on the screen
+    lda     #$F8                    ; $ECC8  wrapped: hide the sword
     sta     oamBuffer+24,y          ; $ECCA
 
-@loc_ECCD:
-    jmp     Sword_SetPositionFromSprite ; $ECCD
+@hitPosition:
+    jmp     Sword_SetPositionFromSprite ; $ECCD  sword hit position from the sprite
 
-@loc_ECD0:
-    cmp     #$07                    ; $ECD0
-    bne     @loc_ECE6               ; $ECD2
-    lda     #$54                    ; $ECD4
+@crouchStroke:
+    cmp     #LINK_POSE_CROUCH_STROKE ; $ECD0  pose 7, the crouching stroke:
+    bne     @thrusts                ; $ECD2
+    lda     #$54                    ; $ECD4  tile $54,
     sta     oamBuffer+25,y          ; $ECD6
     ldx     swordOwner              ; $ECD9
     lda     objY,x                  ; $ECDB
     clc                             ; $ECDD
-    adc     #$10                    ; $ECDE
+    adc     #$10                    ; $ECDE  at his bottom row
     sta     oamBuffer+24,y          ; $ECE0
-    jmp     @loc_ECAC               ; $ECE3
+    jmp     @swordX                 ; $ECE3  X as above
 
-@loc_ECE6:
-    cmp     #$08                    ; $ECE6
-    bne     Sword_UpdateHitPosition ; $ECE8
+@thrusts:
+    cmp     #LINK_POSE_UP_THRUST    ; $ECE6  pose 8, the upward thrust
+    bne     Sword_UpdateHitPosition ; $ECE8  others: Sword_UpdateHitPosition
 
 ; ---------------------------------------------------------------------------
 ; Sword_UpdatePosition
@@ -9210,14 +9230,14 @@ Link_DrawBody:
 Sword_UpdatePosition:
     ldx     swordOwner              ; $ECEA
     lda     swordBaseX,x            ; $ECEC
-    ldy     linkWalkDir,x           ; $ECEE
+    ldy     linkWalkDir,x           ; $ECEE  facing
     clc                             ; $ECF0
-    adc     SwordXOffsets,y         ; $ECF1
+    adc     SwordXOffsets,y         ; $ECF1  + 12 right, + 8 left
     sta     swordX,x                ; $ECF4
-    ldy     objOamOffset,x          ; $ECF7
+    ldy     objOamOffset,x          ; $ECF7  (unused)
     lda     objY,x                  ; $ECF9
     sec                             ; $ECFB
-    sbc     #$04                    ; $ECFC
+    sbc     #$04                    ; $ECFC  4 pixels above his top
     sta     swordY,x                ; $ECFE
     rts                             ; $ED01
 
@@ -9233,47 +9253,47 @@ Sword_UpdatePosition:
 Sword_UpdateHitPosition:
     ldx     swordOwner              ; $ED02
     lda     objState,x              ; $ED04
-    cmp     #$09                    ; $ED06
-    bne     @loc_ED1B               ; $ED08
+    cmp     #LINK_POSE_DOWN_THRUST  ; $ED06  pose 9, the downward thrust:
+    bne     @heldItem               ; $ED08
     jsr     Sword_UpdatePosition    ; $ED0A
     clc                             ; $ED0D
-    adc     #$25                    ; $ED0E
+    adc     #$25                    ; $ED0E  + $25: below his feet
     sta     swordY,x                ; $ED10
     lda     drawScreenX,x           ; $ED13
     clc                             ; $ED15
-    adc     #$10                    ; $ED16
+    adc     #$10                    ; $ED16  X + 16
     sta     swordX,x                ; $ED18
 
-@loc_ED1B:
+@heldItem:
     lda     objState                ; $ED1B
-    cmp     #$0C                    ; $ED1D
+    cmp     #LINK_POSE_HOLD_UP      ; $ED1D  holding up an item ($0C-$0E)?
     bcc     @done                   ; $ED1F
-    lda     heldItem                ; $ED21
+    lda     heldItem                ; $ED21  the item: 2 sprites
     asl     a                       ; $ED24
     tay                             ; $ED25
-    lda     HeldItemTiles,y         ; $ED26
+    lda     HeldItemTiles,y         ; $ED26  its tiles,
     sta     oamBuffer+33            ; $ED29
     lda     HeldItemTiles+1,y       ; $ED2C
     sta     oamBuffer+37            ; $ED2F
     lda     objY                    ; $ED32
     sec                             ; $ED34
-    sbc     #$10                    ; $ED35
+    sbc     #$10                    ; $ED35  16 pixels above Link
     sta     oamBuffer+32            ; $ED37
     sta     oamBuffer+36            ; $ED3A
     lda     drawScreenX             ; $ED3D
     clc                             ; $ED3F
-    adc     #$08                    ; $ED40
+    adc     #$08                    ; $ED40  at X + 8 and X + 16
     sta     oamBuffer+35            ; $ED42
     adc     #$08                    ; $ED45
     sta     oamBuffer+39            ; $ED47
-    lda     #$01                    ; $ED4A
+    lda     #$01                    ; $ED4A  palette 1,
     sta     oamBuffer+34            ; $ED4C
-    lda     #$41                    ; $ED4F
+    lda     #$41                    ; $ED4F  the right one mirrored
     sta     oamBuffer+38            ; $ED51
     ldy     heldItem                ; $ED54
-    cpy     #$10                    ; $ED57
+    cpy     #$10                    ; $ED57  $10 and up (the big items):
     bcc     @done                   ; $ED59
-    lda     ItemSpriteAttrs,y       ; $ED5B
+    lda     ItemSpriteAttrs,y       ; $ED5B  their own palette
     sta     oamBuffer+34            ; $ED5E
     ora     #$40                    ; $ED61
     sta     oamBuffer+38            ; $ED63
@@ -9291,131 +9311,137 @@ Sword_UpdateHitPosition:
 ; ---------------------------------------------------------------------------
 Sword_SetPositionFromSprite:
     ldx     swordOwner              ; $ED67
-    lda     oamBuffer+24,y          ; $ED69
+    lda     oamBuffer+24,y          ; $ED69  the sword sprite's Y
     sta     swordY,x                ; $ED6C
-    lda     oamBuffer+27,y          ; $ED6F
+    lda     oamBuffer+27,y          ; $ED6F  and X
     sta     swordX,x                ; $ED72
 LinkFrameOffsets := * + 2
-    jmp     Sword_UpdateHitPosition ; $ED75
+    jmp     Sword_UpdateHitPosition ; $ED75  its high byte is LinkFrameOffsets' entry 0
     .byte   $F8, $08                                                        ; $ED78
 
 ; ---------------------------------------------------------------------------
 ; Link_DrawSprites
 ;
-; Write a column of Link's sprites with tiles from LinkSpriteTiles.
+; Write a row of three of Link's (or Dark Link's) sprites at oamBuffer,y
+; with tiles LinkSpriteTiles,x: mirrored when facing right, hidden where
+; off screen, and shifted 8 pixels back in the wind-up pose.  It also
+; writes the attributes of the sprite after the row, which for the bottom
+; row is the sword's.
 ;
+; In:      x = tile index, y = sprite offset, temp0 = the row's Y
+; Out:     x += 3, y += 12, temp0 += 16: ready for the next row
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Link_DrawSprites:
-    sty     temp8                   ; $ED7A
-    stx     temp9                   ; $ED7C
-    lda     LinkSpriteTiles,x       ; $ED7E
+    sty     temp8                   ; $ED7A  sprite offset
+    stx     temp9                   ; $ED7C  tile index
+    lda     LinkSpriteTiles,x       ; $ED7E  3 tiles, left to right
     sta     oamBuffer+1,y           ; $ED81
     lda     LinkSpriteTiles+1,x     ; $ED84
     sta     oamBuffer+5,y           ; $ED87
     lda     LinkSpriteTiles+2,x     ; $ED8A
     sta     oamBuffer+9,y           ; $ED8D
-    lda     #$00                    ; $ED90
+    lda     #$00                    ; $ED90  not flipped yet
     sta     temp1                   ; $ED92
     ldx     swordOwner              ; $ED94
-    lda     drawOffscreen,x         ; $ED96
+    lda     drawOffscreen,x         ; $ED96  which probe points are off screen
     sta     temp11                  ; $ED98
-    lda     drawScreenX,x           ; $ED9A
+    lda     drawScreenX,x           ; $ED9A  screen X
     pha                             ; $ED9C
-    lda     linkWalkDir,x           ; $ED9D
+    lda     linkWalkDir,x           ; $ED9D  facing
     ldy     objState,x              ; $ED9F
     tax                             ; $EDA1
     pla                             ; $EDA2
-    cpy     #$04                    ; $EDA3
-    bne     @loc_EDC1               ; $EDA5
+    cpy     #LINK_POSE_WIND_UP      ; $EDA3  pose 4 (the stroke's wind-up):
+    bne     @setX                   ; $EDA5
     clc                             ; $EDA7
-    adc     LinkFrameOffsets,x      ; $EDA8
+    adc     LinkFrameOffsets,x      ; $EDA8  8 pixels back
     pha                             ; $EDAB
-    stx     drawScratch             ; $EDAC
-    ldx     #$00                    ; $EDAE
+    stx     drawScratch             ; $EDAC  facing
+    ldx     #$00                    ; $EDAE  Link's
     ldy     #$00                    ; $EDB0
-    jsr     Obj_ComputeWideOffscreen ; $EDB2
-    lsr     a                       ; $EDB5
+    jsr     Obj_ComputeWideOffscreen ; $EDB2  8 probe points from his X
+    lsr     a                       ; $EDB5  to the shifted sprites' columns:
     lsr     a                       ; $EDB6
     lsr     a                       ; $EDB7
     dec     drawScratch             ; $EDB8
-    bne     @loc_EDBE               ; $EDBA
-    lsr     a                       ; $EDBC
+    bne     @setColumns             ; $EDBA  facing left: 3 shifts
+    lsr     a                       ; $EDBC  facing right: 5
     lsr     a                       ; $EDBD
 
-@loc_EDBE:
-    sta     temp11                  ; $EDBE
+@setColumns:
+    sta     temp11                  ; $EDBE  off-screen columns
     pla                             ; $EDC0
 
-@loc_EDC1:
-    sta     temp2                   ; $EDC1
+@setX:
+    sta     temp2                   ; $EDC1  left sprite's X
     ldx     swordOwner              ; $EDC3
-    lda     linkWalkDir,x           ; $EDC5
+    lda     linkWalkDir,x           ; $EDC5  facing
     ldx     temp9                   ; $EDC7
     ldy     temp8                   ; $EDC9
     lsr     a                       ; $EDCB
-    bne     @loc_EDE7               ; $EDCC
-    asl     temp11                  ; $EDCE
-    lda     LinkSpriteTiles,x       ; $EDD0
+    bne     @attrs                  ; $EDCC  facing left: as stored
+    asl     temp11                  ; $EDCE  right: mirrored
+    lda     LinkSpriteTiles,x       ; $EDD0  swap the outer tiles
     sta     oamBuffer+9,y           ; $EDD3
     lda     LinkSpriteTiles+2,x     ; $EDD6
     sta     oamBuffer+1,y           ; $EDD9
     lda     temp2                   ; $EDDC
     clc                             ; $EDDE
-    adc     #$08                    ; $EDDF
+    adc     #$08                    ; $EDDF  8 pixels to the right
     sta     temp2                   ; $EDE1
-    lda     #$40                    ; $EDE3
+    lda     #$40                    ; $EDE3  flip
     sta     temp1                   ; $EDE5
 
-@loc_EDE7:
+@attrs:
     ldx     swordOwner              ; $EDE7
-    lda     timerFast+11,x          ; $EDE9
-    beq     @loc_EDF1               ; $EDEC
+    lda     timerFast+11,x          ; $EDE9  hurt (Dark Link: TIMER_BOSS)?
+    beq     @flip                   ; $EDEC  no
     lsr     a                       ; $EDEE
-    and     #$03                    ; $EDEF
+    and     #$03                    ; $EDEF  palette cycling every 2 frames
 
-@loc_EDF1:
-    ora     temp1                   ; $EDF1
-    ora     linkSlowed,x            ; $EDF3
+@flip:
+    ora     temp1                   ; $EDF1  + flip
+    ora     linkSlowed,x            ; $EDF3  + behind the background, or Dark Link's palette
     ldx     linkMode                ; $EDF6
-    dex                             ; $EDF8
-    beq     @loc_EDFD               ; $EDF9
-    ora     #$20                    ; $EDFB
+    dex                             ; $EDF8  under the player's control?
+    beq     @store                  ; $EDF9
+    ora     #$20                    ; $EDFB  no (entering, sinking): behind the background
 
-@loc_EDFD:
-    sta     oamBuffer+2,y           ; $EDFD
+@store:
+    sta     oamBuffer+2,y           ; $EDFD  the 3 sprites, and the next:
     sta     oamBuffer+6,y           ; $EE00
     sta     oamBuffer+10,y          ; $EE03
-    sta     oamBuffer+14,y          ; $EE06
-    lda     temp0                   ; $EE09
+    sta     oamBuffer+14,y          ; $EE06  the sword sprite, after the bottom row
+    lda     temp0                   ; $EE09  the row's Y
     sta     oamBuffer,y             ; $EE0B
     sta     oamBuffer+4,y           ; $EE0E
     sta     oamBuffer+8,y           ; $EE11
     clc                             ; $EE14
-    adc     #$10                    ; $EE15
+    adc     #$10                    ; $EE15  the next row 16 pixels lower
     sta     temp0                   ; $EE17
-    lda     #$08                    ; $EE19
+    lda     #$08                    ; $EE19  column 0's bit
     sta     temp10                  ; $EE1B
-    ldx     #$03                    ; $EE1D
+    ldx     #$03                    ; $EE1D  3 columns:
 
 @loop:
     lda     temp10                  ; $EE1F
-    and     temp11                  ; $EE21
-    beq     @loc_EE2A               ; $EE23
-    lda     #$F8                    ; $EE25
+    and     temp11                  ; $EE21  off screen?
+    beq     @next                   ; $EE23
+    lda     #$F8                    ; $EE25  yes: hide the sprite
     sta     oamBuffer,y             ; $EE27
 
-@loc_EE2A:
+@next:
     iny                             ; $EE2A
     iny                             ; $EE2B
     iny                             ; $EE2C
     iny                             ; $EE2D
-    lsr     temp10                  ; $EE2E
+    lsr     temp10                  ; $EE2E  next column
     dex                             ; $EE30
     bne     @loop                   ; $EE31
     ldy     temp8                   ; $EE33
     ldx     temp9                   ; $EE35
-    lda     temp2                   ; $EE37
+    lda     temp2                   ; $EE37  X, 8 pixels apart
     sta     oamBuffer+3,y           ; $EE39
     clc                             ; $EE3C
     adc     #$08                    ; $EE3D
@@ -9423,12 +9449,12 @@ Link_DrawSprites:
     clc                             ; $EE42
     adc     #$08                    ; $EE43
     sta     oamBuffer+11,y          ; $EE45
-    inx                             ; $EE48
+    inx                             ; $EE48  the next row's tiles
     inx                             ; $EE49
     inx                             ; $EE4A
     tya                             ; $EE4B
     clc                             ; $EE4C
-    adc     #$0C                    ; $EE4D
+    adc     #$0C                    ; $EE4D  and sprites
     tay                             ; $EE4F
     rts                             ; $EE50
 
@@ -9464,57 +9490,62 @@ DyingFrames:
 ; ---------------------------------------------------------------------------
 ; Enemy_DrawDying
 ;
-; Draw a dying enemy (from Enemy_Die).
+; Draw a dying enemy (from Enemy_Die): a two-sprite puff (SpritePairTiles
+; by DyingFrames, from the death timer / 8), mirrored into a symmetric
+; shape and flipped vertically every 4 frames; a second puff below it for
+; a tall enemy (sramEnemyHitbox bit 7).  While the timer is $18 or more
+; the enemy itself is drawn too, flashing, 4 sprites further on.
 ;
+; In:      x = enemy index, y = death timer (timerFast+TIMER_ENEMY,x)
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Enemy_DrawDying:
-    cpy     #$18                    ; $EEB2
-    bcc     @loc_EEC7               ; $EEB4
+    cpy     #$18                    ; $EEB2  death timer at $18 or more:
+    bcc     @poof                   ; $EEB4
     tya                             ; $EEB6
-    sta     enemyStunTimer,x        ; $EEB7
+    sta     enemyStunTimer,x        ; $EEB7  the enemy flashes,
     lda     objOamOffset+1,x        ; $EEBA
     pha                             ; $EEBC
-    adc     #$0F                    ; $EEBD
+    adc     #$0F                    ; $EEBD  + 16 (carry set): 4 sprites on
     sta     objOamOffset+1,x        ; $EEBF
-    jsr     Enemy_Draw              ; $EEC1
+    jsr     Enemy_Draw              ; $EEC1  drawn behind the poof
     pla                             ; $EEC4
     sta     objOamOffset+1,x        ; $EEC5
 
-@loc_EEC7:
+@poof:
     lda     #$00                    ; $EEC7
-    sta     enemyStunTimer,x        ; $EEC9
+    sta     enemyStunTimer,x        ; $EEC9  the poof doesn't flash
     ldy     enemyType,x             ; $EECC
-    lda     sramEnemyHitbox,y       ; $EECE
+    lda     sramEnemyHitbox,y       ; $EECE  bit 7: a tall enemy
     pha                             ; $EED1
-    lda     objY+1,x                ; $EED2
+    lda     objY+1,x                ; $EED2  the poof at the enemy's Y
     sta     temp0                   ; $EED4
-    lda     drawScreenX+1           ; $EED6
+    lda     drawScreenX+1           ; $EED6  and screen X
     sta     temp1                   ; $EED8
-    lda     #$02                    ; $EEDA
+    lda     #$02                    ; $EEDA  facing left: as stored
     sta     temp2                   ; $EEDC
-    lda     frameCounter            ; $EEDE
+    lda     frameCounter            ; $EEDE  frameCounter bit 2
     asl     a                       ; $EEE0
     asl     a                       ; $EEE1
     asl     a                       ; $EEE2
     asl     a                       ; $EEE3
     asl     a                       ; $EEE4
-    and     #$80                    ; $EEE5
-    ora     #$01                    ; $EEE7
+    and     #$80                    ; $EEE5  -> bit 7: flip vertically every 4 frames
+    ora     #$01                    ; $EEE7  palette 1
     sta     temp3                   ; $EEE9
     ldy     objOamOffset+1,x        ; $EEEB
-    lda     timerFast+TIMER_ENEMY,x ; $EEED
+    lda     timerFast+TIMER_ENEMY,x ; $EEED  the death timer / 8:
     lsr     a                       ; $EEF0
     lsr     a                       ; $EEF1
     lsr     a                       ; $EEF2
     tax                             ; $EEF3
-    lda     DyingFrames,x           ; $EEF4
+    lda     DyingFrames,x           ; $EEF4  the poof's frame
     tax                             ; $EEF7
-    jsr     Sprite_DrawPairFromTable ; $EEF8
-    jsr     Sprite_FlipPrevious     ; $EEFB
+    jsr     Sprite_DrawPairFromTable ; $EEF8  the left half
+    jsr     Sprite_FlipPrevious     ; $EEFB  mirrored on the right: symmetric
     pla                             ; $EEFE
-    bpl     Sprite_FlipPreviousForObject ; $EEFF
-    dex                             ; $EF01
+    bpl     Sprite_FlipPreviousForObject ; $EEFF  short enemy: done
+    dex                             ; $EF01  tall: the same frame again
     dex                             ; $EF02
 
 ; ---------------------------------------------------------------------------
@@ -9536,11 +9567,11 @@ Sprite_DrawPairFlipped:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sprite_FlipPreviousForObject:
-    ldx     currentObject           ; $EF06
+    ldx     currentObject           ; $EF06  (the enemy, after the table index)
 
 Sprite_FlipPrevious:
-    lda     oamBuffer - 2,y         ; $EF08
-    ora     #$40                    ; $EF0B
+    lda     oamBuffer - 2,y         ; $EF08  the last sprite's attributes:
+    ora     #$40                    ; $EF0B  flip it horizontally
     sta     oamBuffer - 2,y         ; $EF0D
     rts                             ; $EF10
 
@@ -9556,34 +9587,34 @@ Sprite_FlipPrevious:
 ; ---------------------------------------------------------------------------
 Enemy_Draw:
     lda     enemyStunTimer,x        ; $EF11
-    beq     @loc_EF19               ; $EF14
-    dec     enemyStunTimer,x        ; $EF16
+    beq     @setup                  ; $EF14  not flashing
+    dec     enemyStunTimer,x        ; $EF16  count the flash down
 
-@loc_EF19:
-    lda     objY+1,x                ; $EF19
+@setup:
+    lda     objY+1,x                ; $EF19  Y
     sta     temp0                   ; $EF1B
-    lda     drawScreenX+1           ; $EF1D
+    lda     drawScreenX+1           ; $EF1D  screen X
     sta     temp1                   ; $EF1F
-    lda     objFacing+1,x           ; $EF21
+    lda     objFacing+1,x           ; $EF21  facing
     sta     temp2                   ; $EF23
     lda     #$00                    ; $EF25
     sta     temp3                   ; $EF27
     lda     enemyType,x             ; $EF29
     tay                             ; $EF2B
-    lda     sramEnemyAttr,y         ; $EF2C
+    lda     sramEnemyAttr,y         ; $EF2C  palette: bits 7-6
     asl     a                       ; $EF2F
-    rol     temp3                   ; $EF30
+    rol     temp3                   ; $EF30  into temp3
     asl     a                       ; $EF32
     rol     temp3                   ; $EF33
     tya                             ; $EF35
-    asl     a                       ; $EF36
+    asl     a                       ; $EF36  word index
     tay                             ; $EF37
-    lda     sramEnemyDrawPtrs,y     ; $EF38
+    lda     sramEnemyDrawPtrs,y     ; $EF38  the type's draw routine
     sta     temp14                  ; $EF3B
     lda     sramEnemyDrawPtrs+1,y   ; $EF3D
     sta     temp15                  ; $EF40
-    ldy     objOamOffset+1,x        ; $EF42
-    jmp     (temp14)                ; $EF44
+    ldy     objOamOffset+1,x        ; $EF42  the enemy's sprites
+    jmp     (temp14)                ; $EF44  x = enemy, y = its sprites
 
 
 ; ---------------------------------------------------------------------------
@@ -9716,17 +9747,17 @@ Myu_Draw:
 ; ---------------------------------------------------------------------------
 Enemy08_Draw:
     lda     #$02                    ; $EFD2
-    sta     temp2                   ; $EFD4
-    lda     enemyAiState,x          ; $EFD6
+    sta     temp2                   ; $EFD4  facing left: as stored
+    lda     enemyAiState,x          ; $EFD6  falling (0)?
     ldx     #$20                    ; $EFD8
     cmp     #$00                    ; $EFDA
-    beq     @loc_EFE6               ; $EFDC
+    beq     @draw                   ; $EFDC  yes: the block
     ldx     #$22                    ; $EFDE
-    cmp     #$08                    ; $EFE0
-    bcc     @loc_EFE6               ; $EFE2
-    ldx     #$24                    ; $EFE4
+    cmp     #$08                    ; $EFE0  shattering:
+    bcc     @draw                   ; $EFE2  the first 7 frames
+    ldx     #$24                    ; $EFE4  then the dust
 
-@loc_EFE6:
+@draw:
     jmp     Sprite_DrawPairFromTableKeepX ; $EFE6
 
 ; Moa_Draw: pixels the right sprite overlaps the left, by |X velocity| / 4.
@@ -9922,31 +9953,31 @@ BagoBago_Draw:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sprite_DrawAnimatedPairFromTable:
-    sta     temp5                   ; $F0BB
+    sta     temp5                   ; $F0BB  tile index
     lda     frameCounter            ; $F0BD
-    and     #$08                    ; $F0BF
+    and     #$08                    ; $F0BF  every 8 frames,
     lsr     a                       ; $F0C1
     lsr     a                       ; $F0C2
-    adc     temp5                   ; $F0C3
+    adc     temp5                   ; $F0C3  + 0 or 2
     tax                             ; $F0C5
 
 Sprite_DrawPairFromTableKeepX:
     jsr     Sprite_DrawPairFromTable ; $F0C6
-    ldx     currentObject           ; $F0C9
+    ldx     currentObject           ; $F0C9  the enemy again
     rts                             ; $F0CB
 
 Sprite_DrawAnimatedEnemyPair:
-    sta     temp5                   ; $F0CC
+    sta     temp5                   ; $F0CC  tile index
     lda     frameCounter            ; $F0CE
-    and     #$08                    ; $F0D0
+    and     #$08                    ; $F0D0  every 8 frames,
     lsr     a                       ; $F0D2
     lsr     a                       ; $F0D3
-    adc     temp5                   ; $F0D4
+    adc     temp5                   ; $F0D4  + 0 or 2
     tax                             ; $F0D6
 
 Sprite_DrawEnemyPairKeepX:
     jsr     Sprite_DrawEnemyPair    ; $F0D7
-    ldx     currentObject           ; $F0DA
+    ldx     currentObject           ; $F0DA  the enemy again
     rts                             ; $F0DC
 
 
@@ -10137,22 +10168,22 @@ Ache_Draw:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sprite_SetPairAttr:
-    ora     temp3                   ; $F1B5
+    ora     temp3                   ; $F1B5  + the palette
     sty     temp9                   ; $F1B7
     stx     temp8                   ; $F1B9
     ldx     currentObject           ; $F1BB
-    ldy     enemyStunTimer,x        ; $F1BD
-    beq     @loc_F1CC               ; $F1C0
-    and     #$FC                    ; $F1C2
+    ldy     enemyStunTimer,x        ; $F1BD  flashing?
+    beq     @store                  ; $F1C0  no
+    and     #$FC                    ; $F1C2  yes: palette from the timer,
     sta     temp4                   ; $F1C4
     tya                             ; $F1C6
-    lsr     a                       ; $F1C7
+    lsr     a                       ; $F1C7  changing every 2 frames
     and     #$03                    ; $F1C8
     ora     temp4                   ; $F1CA
 
-@loc_F1CC:
+@store:
     ldy     temp9                   ; $F1CC
-    sta     oamBuffer+2,y           ; $F1CE
+    sta     oamBuffer+2,y           ; $F1CE  both sprites
     sta     oamBuffer+6,y           ; $F1D1
     ldx     temp8                   ; $F1D4
     rts                             ; $F1D6
@@ -10166,25 +10197,25 @@ Sprite_SetPairAttr:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sprite_HideOffscreen:
-    lda     #$08                    ; $F1D7
+    lda     #$08                    ; $F1D7  column 0's bit (probe point 0)
     sta     temp10                  ; $F1D9
 
 @loop:
     lda     temp10                  ; $F1DB
-    and     drawOffscreen+1         ; $F1DD
-    beq     @loc_F1E6               ; $F1DF
-    lda     #$F8                    ; $F1E1
+    and     drawOffscreen+1         ; $F1DD  off screen?
+    beq     @next                   ; $F1DF
+    lda     #$F8                    ; $F1E1  yes: hide the sprite
     sta     oamBuffer,y             ; $F1E3
 
-@loc_F1E6:
-    iny                             ; $F1E6
+@next:
+    iny                             ; $F1E6  next sprite
     iny                             ; $F1E7
     iny                             ; $F1E8
     iny                             ; $F1E9
-    lsr     temp10                  ; $F1EA
-    dex                             ; $F1EC
+    lsr     temp10                  ; $F1EA  next column's bit
+    dex                             ; $F1EC  x columns
     bne     @loop                   ; $F1ED
-    ldx     temp8                   ; $F1EF
+    ldx     temp8                   ; $F1EF  (saved by Sprite_SetPairAttr)
     ldy     temp9                   ; $F1F1
     rts                             ; $F1F3
 
@@ -10200,82 +10231,86 @@ Sprite_HideOffscreen:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sprite_DrawEnemyPair:
-    lda     temp2                   ; $F1F4
-    lsr     a                       ; $F1F6
+    lda     temp2                   ; $F1F4  facing:
+    lsr     a                       ; $F1F6  carry = bit 0: facing right
     lda     sramEnemyTiles,x        ; $F1F7
-    bcc     @loc_F209               ; $F1FA
-    sta     oamBuffer+5,y           ; $F1FC
+    bcc     @left                   ; $F1FA  left
+    sta     oamBuffer+5,y           ; $F1FC  right: mirrored, swap the tiles
     lda     sramEnemyTiles+1,x      ; $F1FF
     sta     oamBuffer+1,y           ; $F202
-    lda     #$40                    ; $F205
-    bne     @loc_F214               ; $F207
+    lda     #$40                    ; $F205  and flip both
+    bne     @attrs                  ; $F207  always taken
 
-@loc_F209:
-    sta     oamBuffer+1,y           ; $F209
+@left:
+    sta     oamBuffer+1,y           ; $F209  left: as stored
     lda     sramEnemyTiles+1,x      ; $F20C
     sta     oamBuffer+5,y           ; $F20F
-    lda     #$00                    ; $F212
+    lda     #$00                    ; $F212  no flip
 
-@loc_F214:
-    bpl     Sprite_DrawPairWithAttr ; $F214
+@attrs:
+    bpl     Sprite_DrawPairWithAttr ; $F214  always taken
 
 Sprite_DrawPairFromTable:
-    lda     temp2                   ; $F216
-    lsr     a                       ; $F218
+    lda     temp2                   ; $F216  facing:
+    lsr     a                       ; $F218  carry = bit 0: facing right
     lda     SpritePairTiles,x       ; $F219
-    bcc     @loc_F22B               ; $F21C
-    sta     oamBuffer+5,y           ; $F21E
+    bcc     @left                   ; $F21C  left
+    sta     oamBuffer+5,y           ; $F21E  right: mirrored, swap the tiles
     lda     SpritePairTiles+1,x     ; $F221
     sta     oamBuffer+1,y           ; $F224
-    lda     #$40                    ; $F227
-    bne     Sprite_DrawPairWithAttr ; $F229
+    lda     #$40                    ; $F227  and flip both
+    bne     Sprite_DrawPairWithAttr ; $F229  always taken
 
-@loc_F22B:
-    sta     oamBuffer+1,y           ; $F22B
+@left:
+    sta     oamBuffer+1,y           ; $F22B  left: as stored
     lda     SpritePairTiles+1,x     ; $F22E
     sta     oamBuffer+5,y           ; $F231
-    lda     #$00                    ; $F234
+    lda     #$00                    ; $F234  no flip
 
 ; ---------------------------------------------------------------------------
 ; Sprite_DrawPairWithAttr
 ;
-; Draw a sprite pair with attributes a (Sprite_SetPairAttr).
+; Draw a sprite pair with attributes a (Sprite_SetPairAttr), at Y temp0
+; and X temp1, hiding the columns that are off screen.
 ;
+; Out:     temp0 += 16, y += 8, x += 2: ready for a pair below
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Sprite_DrawPairWithAttr:
     pha                             ; $F236
-    lda     #$01                    ; $F237
+    lda     #$01                    ; $F237  (no caller reads it)
     sta     temp15                  ; $F239
     pla                             ; $F23B
-    jsr     Sprite_SetPairAttr      ; $F23C
-    lda     drawOffscreen+1         ; $F23F
+    jsr     Sprite_SetPairAttr      ; $F23C  + palette, flashing
+    lda     drawOffscreen+1         ; $F23F  off screen vertically?
     and     #$F0                    ; $F241
-    bne     @loc_F25D               ; $F243
-    lda     temp0                   ; $F245
+    bne     @nextPair               ; $F243  yes: leave them hidden
+    lda     temp0                   ; $F245  Y
     sta     oamBuffer,y             ; $F247
     sta     oamBuffer+4,y           ; $F24A
-    ldx     #$02                    ; $F24D
-    jsr     Sprite_HideOffscreen    ; $F24F
-    lda     temp1                   ; $F252
+    ldx     #$02                    ; $F24D  2 columns:
+    jsr     Sprite_HideOffscreen    ; $F24F  hide those off screen
+    lda     temp1                   ; $F252  X
     sta     oamBuffer+3,y           ; $F254
     clc                             ; $F257
-    adc     #$08                    ; $F258
+    adc     #$08                    ; $F258  the right one 8 pixels on
     sta     oamBuffer+7,y           ; $F25A
 
-@loc_F25D:
-    lda     temp0                   ; $F25D
+@nextPair:
+    lda     temp0                   ; $F25D  the next pair 16 pixels lower,
     clc                             ; $F25F
     adc     #$10                    ; $F260
     sta     temp0                   ; $F262
     tya                             ; $F264
     clc                             ; $F265
-    adc     #$08                    ; $F266
+    adc     #$08                    ; $F266  in the next 2 sprites,
     tay                             ; $F268
-    inx                             ; $F269
+    inx                             ; $F269  with the next 2 tiles
     inx                             ; $F26A
     rts                             ; $F26B
 
+; Bits for probe points 0-7 (Obj_ComputeWideOffscreen reads on into
+; OffscreenBits for 4-7); Obj_ComputeScreenPos uses OffscreenBits for 0-3.
 OffscreenBitsWide:
     .byte   $80, $40, $20, $10                                              ; $F26C
 
@@ -10301,50 +10336,50 @@ ScreenXOffsets:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Obj_ComputeScreenPos:
-    sty     temp0                   ; $F27D
+    sty     temp0                   ; $F27D  draw category
     lda     #$00                    ; $F27F
-    sta     a:drawOffscreen,y       ; $F281
-    ldy     #$03                    ; $F284
+    sta     a:drawOffscreen,y       ; $F281  on screen, so far
+    ldy     #$03                    ; $F284  4 probe points, 8 pixels apart:
 
 @loop:
     lda     objX,x                  ; $F286
     clc                             ; $F288
-    adc     ScreenXOffsets,y        ; $F289
+    adc     ScreenXOffsets,y        ; $F289  X + 0, 8, 16, 24
     sta     temp14                  ; $F28C
     lda     objXHi,x                ; $F28E
     adc     #$00                    ; $F290
     sta     temp15                  ; $F292
     lda     temp14                  ; $F294
-    cmp     scrollX                 ; $F296
+    cmp     scrollX                 ; $F296  compared with the scroll:
     lda     temp15                  ; $F299
-    sbc     scrollXHi               ; $F29B
-    beq     @loc_F2AF               ; $F29E
+    sbc     scrollXHi               ; $F29B  high byte of the difference
+    beq     @nextProbe              ; $F29E  0: this probe point is on screen
     sty     temp1                   ; $F2A0
-    lda     OffscreenBits,y         ; $F2A2
+    lda     OffscreenBits,y         ; $F2A2  off screen: set its bit
     ldy     temp0                   ; $F2A5
     ora     a:drawOffscreen,y       ; $F2A7
     sta     a:drawOffscreen,y       ; $F2AA
     ldy     temp1                   ; $F2AD
 
-@loc_F2AF:
+@nextProbe:
     dey                             ; $F2AF
     bpl     @loop                   ; $F2B0
     ldy     temp0                   ; $F2B2
-    lda     objY,x                  ; $F2B4
+    lda     objY,x                  ; $F2B4  visible if 16 pixels below the top of
     clc                             ; $F2B6
-    adc     #$10                    ; $F2B7
+    adc     #$10                    ; $F2B7  the screen is on screen: Y + 16
     lda     objYHi,x                ; $F2B9
-    adc     #$00                    ; $F2BB
-    cmp     #$01                    ; $F2BD
-    beq     @loc_F2C9               ; $F2BF
-    lda     #$F0                    ; $F2C1
+    adc     #$00                    ; $F2BB  with the carry into objYHi
+    cmp     #$01                    ; $F2BD  must be on screen (1)
+    beq     @screenX                ; $F2BF
+    lda     #$F0                    ; $F2C1  else off screen vertically
     ora     a:drawOffscreen,y       ; $F2C3
     sta     a:drawOffscreen,y       ; $F2C6
 
-@loc_F2C9:
+@screenX:
     lda     objX,x                  ; $F2C9
     sec                             ; $F2CB
-    sbc     scrollX                 ; $F2CC
+    sbc     scrollX                 ; $F2CC  screen X
     sta     a:drawScreenX,y         ; $F2CF
     rts                             ; $F2D2
 
@@ -10352,36 +10387,40 @@ Obj_ComputeScreenPos:
 ; Obj_ComputeWideOffscreen
 ;
 ; Like Obj_ComputeScreenPos, but test 8 horizontal probe points, for wide
-; objects.
+; objects, and return the bits instead of storing them.
+;
+; In:      x = object slot
+; Out:     a = bit 7-k set if probe point k (X + 8k) is off screen
+; Clobbers: y, temp2, temp14, temp15
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Obj_ComputeWideOffscreen:
-    lda     #$00                    ; $F2D3
+    lda     #$00                    ; $F2D3  no bits yet
     sta     temp2                   ; $F2D5
-    ldy     #$07                    ; $F2D7
+    ldy     #$07                    ; $F2D7  8 probe points, 8 pixels apart:
 
 @loop:
     lda     objX,x                  ; $F2D9
     clc                             ; $F2DB
-    adc     ScreenXOffsets,y        ; $F2DC
+    adc     ScreenXOffsets,y        ; $F2DC  X + 0, 8, ... 56
     sta     temp14                  ; $F2DF
     lda     objXHi,x                ; $F2E1
     adc     #$00                    ; $F2E3
     sta     temp15                  ; $F2E5
     lda     temp14                  ; $F2E7
-    cmp     scrollX                 ; $F2E9
+    cmp     scrollX                 ; $F2E9  compared with the scroll:
     lda     temp15                  ; $F2EC
-    sbc     scrollXHi               ; $F2EE
-    beq     @loc_F2FA               ; $F2F1
+    sbc     scrollXHi               ; $F2EE  high byte of the difference
+    beq     @nextProbe              ; $F2F1  0: this probe point is on screen
     lda     temp2                   ; $F2F3
-    ora     OffscreenBitsWide,y     ; $F2F5
+    ora     OffscreenBitsWide,y     ; $F2F5  runs on into OffscreenBits for y >= 4
     sta     temp2                   ; $F2F8
 
-@loc_F2FA:
+@nextProbe:
     dey                             ; $F2FA
     bpl     @loop                   ; $F2FB
-    lda     temp2                   ; $F2FD
+    lda     temp2                   ; $F2FD  a = bits 7-0 for probe points 0-7
     rts                             ; $F2FF
 ; DMC (delta modulation) samples, played by bank 6's Sfx_UpdateDmc from the
 ; DmcSamples table: Link's cry when hurt, and Ganon's laugh in six parts.

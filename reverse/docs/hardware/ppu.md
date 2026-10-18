@@ -75,6 +75,25 @@ projectiles' slots are handed out in a rotating order (`oamRotation`,
 `Enemies_Update`), so that when too many sprites share a scanline a
 different one disappears each frame.
 
+Each enemy has 24 bytes (6 sprites) of `oamBuffer`.  The rotation adds
+`oamRotation` (0-5, advanced every frame) to the enemy index, so each of
+the six slots goes to each enemy in turn.  Link uses $08-$1F, and his
+sword sprite in a stroke, or an item he holds up, uses $20 (and $24), the
+first projectile slot (see [Link](../systems/link.md#poses-and-drawing)).
+
+`Obj_ComputeScreenPos` decides what is off screen: for draw category y
+(0 Link, 1 enemy, 2 projectile, 3 Link's projectile) it sets
+`drawScreenX,y`, and in `drawOffscreen,y` one bit for each of four probe
+points 8 pixels apart that is not on the screen's page, plus $F0 if the
+object is not on screen vertically.  An object counts as on screen
+vertically if a point 16 pixels below its Y is.  Draw routines hide the
+sprites of off-screen columns (`Sprite_HideOffscreen`).
+
+A dying enemy is a two-sprite puff (`Enemy_DrawDying`), mirrored into a
+symmetric shape and flipped vertically every 4 frames, doubled for tall
+enemies, with the enemy itself still drawn, flashing, while its death
+timer (from $20) is $18 or more.
+
 Most objects are drawn as pairs of 8x16 sprites side by side
 (`Sprite_DrawEnemyPair`, `Sprite_DrawPairFromTable`): the tiles come from
 `sramEnemyTiles` (the enemy group's `EnemyTiles_Bank1` ...) or a ROM

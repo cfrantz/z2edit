@@ -38,6 +38,21 @@ LINK_MODE_ENTER         = 0     ; being placed in a new area
 LINK_MODE_CONTROL       = 1     ; under the player's control
 LINK_MODE_SINK          = 2     ; sinking to his death (e.g. in lava)
 
+; Link's poses (objState of slot 0; Dark Link uses them too).  0-2 are the
+; walking frames (2 also rising in a jump); LinkBodyFrames has each pose's
+; tiles.
+LINK_POSE_STAND         = $03
+LINK_POSE_WIND_UP       = $04   ; standing stroke, sword raised
+LINK_POSE_STROKE        = $05   ; standing stroke, sword out
+LINK_POSE_CROUCH        = $06   ; also most of a jump
+LINK_POSE_CROUCH_STROKE = $07
+LINK_POSE_UP_THRUST     = $08
+LINK_POSE_DOWN_THRUST   = $09
+LINK_POSE_HURT          = $0A
+LINK_POSE_ENDING        = $0B   ; after the Dark Link fight (DarkLink_StartEnding)
+LINK_POSE_HOLD_UP       = $0C   ; holding up an item: $0C side view areas,
+                                ; $0D towns (not seen), $0E palaces
+
 ; ppuStringSelect values that select the RAM buffers.
 PPU_STRING_BUFFER0      = 0
 PPU_STRING_BUFFER1      = 1

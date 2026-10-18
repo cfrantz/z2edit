@@ -58,14 +58,11 @@ unless noted):
 - 8a. Done: the core frame and the game state machine (bank 7), checked
   over both movies; docs/architecture/main-loop-and-nmi.md has the game
   NMI's frame step by step.  The DMC samples at $F300 are labelled.
-- 8b. Sprite management (bank 7, ~880; the enemy draw routines in it are
-  done): slot rotation in `Enemies_Update`, `Obj_ComputeScreenPos`,
-  `Obj_ComputeWideOffscreen`, `Sprite_HideOffscreen`, the
-  `Sprite_Draw*`/`Sprite_Flip*` family, `Enemy_Draw`, `Enemy_DrawDying`,
-  `Enemy08_Draw`, `Link_Draw`, `Link_DrawBody`, `Link_DrawSprites`,
-  `Link_DrawFairy` and the `Sword_*Position` routines.  The other
-  `oamBuffer` writers (the HUD's meter sprites, Link's projectiles, the
-  area banks' projectile drawers) are commented with their subsystems.
+- 8b. Done: sprite management (bank 7): the slot rotation, the off-screen
+  tests, the `Sprite_*` helpers, the dying puff, and Link's and Dark
+  Link's drawing, with Link's poses (`LINK_POSE_*`) checked over the 100%
+  movie; docs/systems/link.md (Poses and Drawing) and docs/hardware/ppu.md
+  (Sprites).  `Fairy_Draw` (18%) is left for 8p.
 - 8c. Game modes and transitions (bank 7, ~990): `Mode_*` (except
   `Mode_SideView`), `Location_*`, `ReturnToOverworld_*`, `LoadWorld_*`,
   `Mode_LoadWorld` (222 instructions), `Death_*` and the continue

@@ -139,6 +139,48 @@ direction held on the D-pad.  He does not move in a direction that is
 blocked (`objCollision`), nor up above Y = $18.  His collision probes use
 the fairy's offsets.
 
+## Poses and Drawing
+
+Link's pose is `objState` of slot 0 (`LINK_POSE_*`; checked over the
+100% movie and screenshots):
+
+| Pose | |
+|------|---|
+| 0-2 | walking frames; 2 also rising in a jump |
+| 3 | standing (`LINK_POSE_STAND`) |
+| 4 | standing stroke, sword raised (`LINK_POSE_WIND_UP`), drawn 8 pixels back |
+| 5 | standing stroke, sword out (`LINK_POSE_STROKE`) |
+| 6 | crouching, and most of a jump (`LINK_POSE_CROUCH`); 4 pixels higher in the air |
+| 7 | crouching stroke (`LINK_POSE_CROUCH_STROKE`) |
+| 8 | upward thrust (`LINK_POSE_UP_THRUST`) |
+| 9 | downward thrust (`LINK_POSE_DOWN_THRUST`) |
+| $0A | hurt (`LINK_POSE_HURT`) |
+| $0B | after the Dark Link fight (`LINK_POSE_ENDING`): the right column mirrored |
+| $0C-$0E | holding up an item (`LINK_POSE_HOLD_UP`): $0C in side view areas, $0D in towns (never seen), $0E in palaces |
+
+`Link_Draw` draws him as two rows of three 8x16 sprites at `oamBuffer`
+$08-$1F (`Link_DrawSprites`, one call per row), with the tiles of his pose
+(`LinkBodyFrames`, `LinkSpriteTiles`).  The tiles face left; facing right
+they are mirrored and drawn 8 pixels further right.  A blank tile ($F5)
+hides its sprite.  While hurt, the palette cycles every 2 frames; while
+entering an area or sinking, and on the bottom row while wading, he is
+behind the background.
+
+In poses 5 and 7 a seventh sprite, the sword (tile $32 at the top row,
+or $54 at the bottom row), goes at `oamBuffer` $20, which is also the
+first enemy projectile's slot.  It is 20 pixels beyond the body (8
+pixels to the left of it facing left), hidden if that wraps past the
+screen edge, and shares Link's attributes.  Its position becomes the
+sword's hit position (`swordX`, `swordY`); for the thrusts the hit
+position is computed instead (`Sword_UpdatePosition`: 4 pixels above
+him for pose 8; below his feet for pose 9).  Holding up an item, the item
+is two sprites at `oamBuffer` $20 and $24, 16 pixels above him.
+
+Dark Link is drawn by the same code with `swordOwner` 1, his own sprite
+offset and `extraSpriteAttrs` for his palette.  Some steps still read
+Link's variables: the vertical off-screen test, the blank tile check
+(Link's six sprites), and the fairy.
+
 ## Status
 
 The numbers above are read from the code.  Over the first 20000 frames of
