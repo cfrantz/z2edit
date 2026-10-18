@@ -414,12 +414,12 @@ Palace_DrawSleepingZelda:
     jsr     AreaMap_GetPagePtr      ; $829E
     ldx     #$01                    ; $82A1
     lda     #$86                    ; $82A3  $86,
-    jmp     @loc_82AA               ; $82A5
+    jmp     @put                    ; $82A5
 
 @loop:
     lda     #$87                    ; $82A8  then $87
 
-@loc_82AA:
+@put:
     sta     (temp14),y              ; $82AA
     iny                             ; $82AC
     dex                             ; $82AD
@@ -710,18 +710,18 @@ EnemyLists_Bank5:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ending_LoadArea:
-    lda     #$05                    ; $8B50
+    lda     #$05                    ; $8B50  the Great Palace's bank,
     sta     areaPrgBank             ; $8B52
-    lda     #$05                    ; $8B55
+    lda     #$05                    ; $8B55  world 5
     sta     currentWorld            ; $8B57
-    lda     #$3E                    ; $8B5A
-    ldy     sceneStep               ; $8B5C
-    bne     @loc_8B63               ; $8B5F
+    lda     #$3E                    ; $8B5A  area $3E,
+    ldy     sceneStep               ; $8B5C  or $3D at first (Zelda asleep)
+    bne     @setArea                ; $8B5F
     lda     #$3D                    ; $8B61
 
-@loc_8B63:
+@setArea:
     sta     areaId                  ; $8B63
-    jmp     Game_BlankAndNextMode   ; $8B66
+    jmp     Game_BlankAndNextMode   ; $8B66  screen off, next mode
 
 ; ---------------------------------------------------------------------------
 ; Ending_DrawCurtainTop
@@ -733,24 +733,24 @@ Ending_LoadArea:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ending_DrawCurtainTop:
-    ldy     sceneStep               ; $8B69
-    bne     @loc_8B77               ; $8B6C
-    ldx     #$04                    ; $8B6E
+    ldy     sceneStep               ; $8B69  the first visit:
+    bne     @curtain                ; $8B6C
+    ldx     #$04                    ; $8B6E  the ending music
     stx     musicRequest            ; $8B70
-    lda     #$06                    ; $8B72
+    lda     #$06                    ; $8B72  world 6: the ending's songs
     sta     currentWorld            ; $8B74
 
-@loc_8B77:
-    lda     PPUSTATUS               ; $8B77
-    lda     ppuCtrlShadow           ; $8B7A
+@curtain:
+    lda     PPUSTATUS               ; $8B77  reset the latch
+    lda     ppuCtrlShadow           ; $8B7A  +1 per write
     and     #$FB                    ; $8B7C
     sta     PPUCTRL                 ; $8B7E
-    lda     #$20                    ; $8B81
+    lda     #$20                    ; $8B81  PPU $2000:
     sta     PPUADDR                 ; $8B83
     lda     #$00                    ; $8B86
     sta     PPUADDR                 ; $8B88
-    ldy     #$03                    ; $8B8B
-    lda     #$9A                    ; $8B8D
+    ldy     #$03                    ; $8B8B  4 rows,
+    lda     #$9A                    ; $8B8D  alternating $9A and $9B
 
 @loop:
     ldx     #$20                    ; $8B8F
@@ -759,16 +759,16 @@ Ending_DrawCurtainTop:
     sta     PPUDATA                 ; $8B91
     dex                             ; $8B94
     bne     @loop2                  ; $8B95
-    eor     #$01                    ; $8B97
+    eor     #$01                    ; $8B97  the other tile
     dey                             ; $8B99
     bpl     @loop                   ; $8B9A
-    lda     #$23                    ; $8B9C
+    lda     #$23                    ; $8B9C  the attributes ($23C0):
 EnemyLists4_Bank5 := * + 2
     .assert EnemyLists4_Bank5 = AreaBank::EnemyLists+768, error, "interface address moved"
     sta     PPUADDR                 ; $8B9E
     lda     #$C0                    ; $8BA1
     sta     PPUADDR                 ; $8BA3
-    ldy     #$08                    ; $8BA6
+    ldy     #$08                    ; $8BA6  8 bytes of $55
 
 @loop:
     lda     #$55                    ; $8BA8
@@ -802,7 +802,7 @@ EndingShimmerColors:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ending_Run:
-    ldx     ppuBuffer0Len           ; $8BBF
+    ldx     ppuBuffer0Len           ; $8BBF  the shimmer palette string
     ldy     #$00                    ; $8BC2
 
 @loop:
@@ -812,16 +812,16 @@ Ending_Run:
     iny                             ; $8BCB
     cpy     #$08                    ; $8BCC
     bne     @loop                   ; $8BCE
-    lda     frameCounter            ; $8BD0
+    lda     frameCounter            ; $8BD0  every 4 frames,
     lsr     a                       ; $8BD2
     lsr     a                       ; $8BD3
     and     #$03                    ; $8BD4
     tay                             ; $8BD6
-    lda     EndingShimmerColors,y   ; $8BD7
+    lda     EndingShimmerColors,y   ; $8BD7  the next color
     sta     ppuBuffer0-3,x          ; $8BDA  the string's second color
-    dex                             ; $8BDD
+    dex                             ; $8BDD  (the $FF end is the next string's start)
     stx     ppuBuffer0Len           ; $8BDE
-    lda     sceneStep               ; $8BE1
+    lda     sceneStep               ; $8BE1  this scene
     jsr     JumpTable               ; $8BE4
 ; (inline jump table)
     .word   Ending_HoldTriforce     ; $8BE7
@@ -854,19 +854,19 @@ EndingLinkSprites:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ending_HoldTriforce:
-    ldy     #$07                    ; $8C1D
+    ldy     #$07                    ; $8C1D  the Triforce: two sprites
 
 @loop:
     lda     EndingTriforceSprites,y ; $8C1F
     sta     oamBuffer+48,y          ; $8C22
     dey                             ; $8C25
     bpl     @loop                   ; $8C26
-    lda     #$03                    ; $8C28
+    lda     #$03                    ; $8C28  palette 3,
     sta     oamBuffer+50            ; $8C2A
-    ora     #$40                    ; $8C2D
+    ora     #$40                    ; $8C2D  the right half mirrored
     sta     oamBuffer+54            ; $8C2F
-    jsr     Ending_DrawLink         ; $8C32
-    jmp     Ending_Wait             ; $8C35
+    jsr     Ending_DrawLink         ; $8C32  Link holding it up
+    jmp     Ending_Wait             ; $8C35  96 frames
 
 ; ---------------------------------------------------------------------------
 ; Ending_DrawLink
@@ -876,7 +876,7 @@ Ending_HoldTriforce:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ending_DrawLink:
-    ldy     #$0F                    ; $8C38
+    ldy     #$0F                    ; $8C38  4 sprites
 
 @loop:
     lda     EndingLinkSprites,y     ; $8C3A
@@ -894,19 +894,19 @@ Ending_DrawLink:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ending_Wait:
-    lda     endingTimer             ; $8C44
-    bne     @loc_8C4C               ; $8C46
-    lda     #$60                    ; $8C48
+    lda     endingTimer             ; $8C44  starting?
+    bne     @count                  ; $8C46
+    lda     #$60                    ; $8C48  96 frames
     sta     endingTimer             ; $8C4A
 
-@loc_8C4C:
-    dec     endingTimer             ; $8C4C
+@count:
+    dec     endingTimer             ; $8C4C  count
     bne     @done                   ; $8C4E
-    inc     sceneStep               ; $8C50
+    inc     sceneStep               ; $8C50  time up: next scene
     lda     sceneStep               ; $8C53
-    cmp     #$0A                    ; $8C56
+    cmp     #$0A                    ; $8C56  scene 10 (the credits)?
     bne     @done                   ; $8C58
-    lda     #$08                    ; $8C5A
+    lda     #$08                    ; $8C5A  their music
     sta     musicRequest            ; $8C5C
 
 @done:
@@ -921,17 +921,17 @@ Ending_Wait:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ending_SplitTriforce:
-    jsr     Ending_DrawLink         ; $8C5F
-    lda     triforceY               ; $8C62
+    jsr     Ending_DrawLink         ; $8C5F  Link still holding up
+    lda     triforceY               ; $8C62  the pieces in place (Y $60)?
     cmp     #$60                    ; $8C64
-    bne     @loc_8C6E               ; $8C66
-    jsr     Ending_DrawTriforces    ; $8C68
+    bne     @notDone                ; $8C66
+    jsr     Ending_DrawTriforces    ; $8C68  yes: wait 96 frames
     jmp     Ending_Wait             ; $8C6B
 
-@loc_8C6E:
-    lda     triforceY               ; $8C6E
-    bne     @loc_8C7F               ; $8C70
-    ldx     #$02                    ; $8C72
+@notDone:
+    lda     triforceY               ; $8C6E  starting?
+    bne     @move                   ; $8C70
+    ldx     #$02                    ; $8C72  three pieces at X $78, Y $A0
 
 @loop:
     lda     #$A0                    ; $8C74
@@ -941,13 +941,13 @@ Ending_SplitTriforce:
     dex                             ; $8C7C
     bpl     @loop                   ; $8C7D
 
-@loc_8C7F:
-    lda     frameCounter            ; $8C7F
+@move:
+    lda     frameCounter            ; $8C7F  every 8 frames:
     and     #$07                    ; $8C81
     bne     Ending_DrawTriforces    ; $8C83
-    dec     triforceY               ; $8C85
-    inc     triforceX+1             ; $8C87
-    dec     triforceX+2             ; $8C89
+    dec     triforceY               ; $8C85  the first rises,
+    inc     triforceX+1             ; $8C87  the second moves right,
+    dec     triforceX+2             ; $8C89  the third left
 
 ; ---------------------------------------------------------------------------
 ; Ending_DrawTriforces
@@ -957,28 +957,28 @@ Ending_SplitTriforce:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ending_DrawTriforces:
-    ldx     #$02                    ; $8C8B
+    ldx     #$02                    ; $8C8B  each piece:
 
 @loop:
-    txa                             ; $8C8D
+    txa                             ; $8C8D  its 2 sprites
     asl     a                       ; $8C8E
     asl     a                       ; $8C8F
     asl     a                       ; $8C90
     tay                             ; $8C91
-    lda     triforceY,x             ; $8C92
+    lda     triforceY,x             ; $8C92  Y
     sta     oamBuffer+48,y          ; $8C94
     sta     oamBuffer+52,y          ; $8C97
-    lda     #$D6                    ; $8C9A
+    lda     #$D6                    ; $8C9A  tile $D6
     sta     oamBuffer+49,y          ; $8C9C
     sta     oamBuffer+53,y          ; $8C9F
-    lda     #$03                    ; $8CA2
+    lda     #$03                    ; $8CA2  palette 3,
     sta     oamBuffer+50,y          ; $8CA4
-    ora     #$40                    ; $8CA7
+    ora     #$40                    ; $8CA7  the right half mirrored
     sta     oamBuffer+54,y          ; $8CA9
-    lda     triforceX,x             ; $8CAC
+    lda     triforceX,x             ; $8CAC  X,
     sta     oamBuffer+51,y          ; $8CAE
     clc                             ; $8CB1
-    adc     #$08                    ; $8CB2
+    adc     #$08                    ; $8CB2  + 8
     sta     oamBuffer+55,y          ; $8CB4
     dex                             ; $8CB7
     bpl     @loop                   ; $8CB8
@@ -998,83 +998,83 @@ Ending_DrawTriforces:
 Ending_Flash:
     jsr     Ending_DrawTriforces    ; $8CBB
     jsr     Ending_DrawLink         ; $8CBE
-    lda     endingSubStep           ; $8CC1
-    bne     @loc_8CD0               ; $8CC3
-    lda     #$04                    ; $8CC5
+    lda     endingSubStep           ; $8CC1  the first frame:
+    bne     @flash                  ; $8CC3
+    lda     #$04                    ; $8CC5  the spell sound,
     sta     sfxRequest              ; $8CC7
-    lda     #$E0                    ; $8CC9
+    lda     #$E0                    ; $8CC9  flash from $E0
     sta     spellFlash              ; $8CCB
     inc     endingSubStep           ; $8CCE
 
-@loc_8CD0:
-    lda     backdropColor           ; $8CD0
+@flash:
+    lda     backdropColor           ; $8CD0  as Link_UpdatePalette: entry 4's color 0
     sta     sramLinkPalette0+4      ; $8CD3
-    lda     spellFlash              ; $8CD6
+    lda     spellFlash              ; $8CD6  flashing?
     asl     a                       ; $8CD9
-    bne     @loc_8CE3               ; $8CDA
-    sta     spellFlash              ; $8CDC
-    jmp     Ending_Wait             ; $8CDF
+    bne     @queue                  ; $8CDA
+    sta     spellFlash              ; $8CDC  no: done
+    jmp     Ending_Wait             ; $8CDF  wait 96 frames
 ; (code below not executed in the test movies)
 
 @done:
     rts                             ; $8CE2
 ; (end of code not executed in the test movies)
 
-@loc_8CE3:
-    ldx     ppuBuffer0Len           ; $8CE3
+@queue:
+    ldx     ppuBuffer0Len           ; $8CE3  room in the buffer?
     cpx     #$19                    ; $8CE6
-    bcs     @done                   ; $8CE8
-    dec     spellFlash              ; $8CEA
-    lda     #$3F                    ; $8CED
+    bcs     @done                   ; $8CE8  no: wait a frame
+    dec     spellFlash              ; $8CEA  one frame less
+    lda     #$3F                    ; $8CED  $3F10: Link's palette,
     sta     ppuBuffer0,x            ; $8CEF
     lda     #$10                    ; $8CF2
     sta     ppuBuffer0+1,x          ; $8CF4
-    lda     #$04                    ; $8CF7
+    lda     #$04                    ; $8CF7  4 colors
     sta     ppuBuffer0+2,x          ; $8CF9
-    ldy     #$03                    ; $8CFC
+    ldy     #$03                    ; $8CFC  the area's background palette
     lda     (areaDataPtr),y         ; $8CFE
     iny                             ; $8D00
     and     #$38                    ; $8D01
-    cmp     #$08                    ; $8D03
-    bne     @loc_8D10               ; $8D05
+    cmp     #$08                    ; $8D03  a dark cave (1)
+    bne     @pickColors             ; $8D05
 ; (code below not executed in the test movies)
-    lda     currentWorld            ; $8D07
+    lda     currentWorld            ; $8D07  without the candle?
     ora     itemOwned               ; $8D0A
-    bne     @loc_8D10               ; $8D0D
-    iny                             ; $8D0F
+    bne     @pickColors             ; $8D0D
+    iny                             ; $8D0F  the dark entry
 ; (end of code not executed in the test movies)
 
-@loc_8D10:
-    lda     spellFlash              ; $8D10
+@pickColors:
+    lda     spellFlash              ; $8D10  flashing:
     and     #$7F                    ; $8D13
-    beq     @loc_8D1A               ; $8D15
-    and     #$03                    ; $8D17
+    beq     @setColors              ; $8D15
+    and     #$03                    ; $8D17  entries 0-3 by frame
     tay                             ; $8D19
 
-@loc_8D1A:
-    lda     sramLinkPalette1,y      ; $8D1A
+@setColors:
+    lda     sramLinkPalette1,y      ; $8D1A  colors 1-3
     sta     ppuBuffer0+4,x          ; $8D1D
     lda     sramLinkPalette2,y      ; $8D20
     sta     ppuBuffer0+5,x          ; $8D23
     lda     sramLinkPalette3,y      ; $8D26
     sta     ppuBuffer0+6,x          ; $8D29
-    lda     spellFlash              ; $8D2C
+    lda     spellFlash              ; $8D2C  bit 7: color 0 too
     asl     a                       ; $8D2F
-    bcs     @loc_8D34               ; $8D30
+    bcs     @setBackdrop            ; $8D30
 ; (code below not executed in the test movies)
-    ldy     #$04                    ; $8D32
+    ldy     #$04                    ; $8D32  else the normal backdrop
 ; (end of code not executed in the test movies)
 
-@loc_8D34:
+@setBackdrop:
     lda     sramLinkPalette0,y      ; $8D34
     sta     ppuBuffer0+3,x          ; $8D37
-    lda     #$FF                    ; $8D3A
+    lda     #$FF                    ; $8D3A  end
     sta     ppuBuffer0+7,x          ; $8D3C
-    txa                             ; $8D3F
+    txa                             ; $8D3F  7 bytes
     clc                             ; $8D40
     adc     #$07                    ; $8D41
     sta     ppuBuffer0Len           ; $8D43
-    lda     spellFlash              ; $8D46
+    lda     spellFlash              ; $8D46  still flashing?
     bne     Ending_WakeZelda_Done   ; $8D49
 ; (code below not executed in the test movies)
     jmp     Ending_Wait             ; $8D4B
@@ -1095,7 +1095,7 @@ EndingWakeText:
 ; ---------------------------------------------------------------------------
 Ending_WakeZelda:
     ldy     #$00                    ; $8D64
-    ldx     ppuBuffer0Len           ; $8D66
+    ldx     ppuBuffer0Len           ; $8D66  the redrawn altar (22 bytes)
 
 @loop:
     lda     EndingWakeText,y        ; $8D69
@@ -1104,15 +1104,15 @@ Ending_WakeZelda:
     iny                             ; $8D70
     cpy     #$16                    ; $8D71
     bne     @loop                   ; $8D73
-    dex                             ; $8D75
+    dex                             ; $8D75  (the $FF end is the next string's start)
     stx     ppuBuffer0Len           ; $8D76
     jsr     Ending_DrawTriforces    ; $8D79
     jsr     Ending_DrawLink         ; $8D7C
-    jsr     Ending_Wait             ; $8D7F
-    lda     endingTimer             ; $8D82
+    jsr     Ending_Wait             ; $8D7F  96 frames
+    lda     endingTimer             ; $8D82  over?
     bne     Ending_WakeZelda_Done   ; $8D84
-    sta     PPUMASK                 ; $8D86
-    sta     gameMode                ; $8D89
+    sta     PPUMASK                 ; $8D86  screen off,
+    sta     gameMode                ; $8D89  mode 0: load area $3E
 
 Ending_WakeZelda_Done:
     rts                             ; $8D8C
@@ -1132,7 +1132,7 @@ EndingCoupleAttr:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ending_ShowCouple:
-    ldx     ppuBuffer0Len           ; $8DBA
+    ldx     ppuBuffer0Len           ; $8DBA  the stage's attributes (13 bytes)
     ldy     #$00                    ; $8DBD
 
 @loop:
@@ -1144,8 +1144,8 @@ Ending_ShowCouple:
     bne     @loop                   ; $8DC9
     dex                             ; $8DCB
     stx     ppuBuffer0Len           ; $8DCC
-    jsr     Ending_DrawCouple       ; $8DCF
-    jmp     Ending_Wait             ; $8DD2
+    jsr     Ending_DrawCouple       ; $8DCF  Link and Zelda
+    jmp     Ending_Wait             ; $8DD2  96 frames
 
 ; ---------------------------------------------------------------------------
 ; Ending_DrawCouple
@@ -1155,7 +1155,7 @@ Ending_ShowCouple:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ending_DrawCouple:
-    ldy     #$1F                    ; $8DD5
+    ldy     #$1F                    ; $8DD5  8 sprites
 
 @loop:
     lda     EndingCoupleSprites,y   ; $8DD7
@@ -1179,61 +1179,61 @@ EndingMessage:
 ; ---------------------------------------------------------------------------
 Ending_TypeMessage:
     jsr     Ending_DrawCouple       ; $8E0A
-    ldx     messageIndex            ; $8E0D
+    ldx     messageIndex            ; $8E0D  the next letter
     lda     EndingMessage,x         ; $8E0F
-    cmp     #$FF                    ; $8E12
-    bne     @loc_8E1D               ; $8E14
-    lda     #$00                    ; $8E16
+    cmp     #$FF                    ; $8E12  the end?
+    bne     @letter                 ; $8E14
+    lda     #$00                    ; $8E16  yes:
     sta     endingSubStep           ; $8E18
-    jmp     Ending_Wait             ; $8E1A
+    jmp     Ending_Wait             ; $8E1A  wait 96 frames
 
-@loc_8E1D:
-    cmp     #$00                    ; $8E1D
-    bne     @loc_8E26               ; $8E1F
-    inc     messageIndex            ; $8E21
+@letter:
+    cmp     #$00                    ; $8E1D  a space?
+    bne     @type                   ; $8E1F
+    inc     messageIndex            ; $8E21  skip it at once
     jmp     Ending_TypeMessage      ; $8E23
 
-@loc_8E26:
-    lda     frameCounter            ; $8E26
+@type:
+    lda     frameCounter            ; $8E26  every 16 frames:
     and     #$0F                    ; $8E28
     bne     @done                   ; $8E2A
-    lda     #$21                    ; $8E2C
+    lda     #$21                    ; $8E2C  from PPU $21CB:
     sta     temp0                   ; $8E2E
     lda     #$CB                    ; $8E30
     sta     temp1                   ; $8E32
     lda     messageIndex            ; $8E34
 
-@loc_8E36:
-    cmp     #$0A                    ; $8E36
-    bmi     @loc_8E4D               ; $8E38
+@line:
+    cmp     #$0A                    ; $8E36  lines of 10:
+    bmi     @column                 ; $8E38
     sec                             ; $8E3A
     sbc     #$0A                    ; $8E3B
     pha                             ; $8E3D
-    lda     temp1                   ; $8E3E
+    lda     temp1                   ; $8E3E  2 rows down per line
     clc                             ; $8E40
     adc     #$40                    ; $8E41
     sta     temp1                   ; $8E43
-    bcc     @loc_8E49               ; $8E45
+    bcc     @nextLine               ; $8E45
     inc     temp0                   ; $8E47
 
-@loc_8E49:
+@nextLine:
     pla                             ; $8E49
-    jmp     @loc_8E36               ; $8E4A
+    jmp     @line                   ; $8E4A
 
-@loc_8E4D:
+@column:
     inc     messageIndex            ; $8E4D
-    clc                             ; $8E4F
+    clc                             ; $8E4F  its column
     adc     temp1                   ; $8E50
     sta     ppuBuffer0+1            ; $8E52
     lda     temp0                   ; $8E55
     sta     ppuBuffer0              ; $8E57
-    lda     #$01                    ; $8E5A
+    lda     #$01                    ; $8E5A  one tile
     sta     ppuBuffer0+2            ; $8E5C
-    lda     EndingMessage,x         ; $8E5F
+    lda     EndingMessage,x         ; $8E5F  the letter
     sta     ppuBuffer0+3            ; $8E62
-    lda     #$FF                    ; $8E65
+    lda     #$FF                    ; $8E65  end
     sta     ppuBuffer0+4            ; $8E67
-    lda     #$02                    ; $8E6A
+    lda     #$02                    ; $8E6A  pulse 1 effect $02 (the "item dropped" sound)
     sta     sfxRequest+3            ; $8E6C
 
 @done:
@@ -1252,33 +1252,33 @@ Ending_TypeMessage:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Curtain_Run:
-    lda     sceneStep               ; $8E6F
+    lda     sceneStep               ; $8E6F  scene 13: nobody
     cmp     #$0D                    ; $8E72
-    beq     @loc_8E83               ; $8E74
-    cmp     #$09                    ; $8E76
-    beq     @loc_8E80               ; $8E78
-    jsr     Ending_DrawCouple       ; $8E7A
-    jmp     @loc_8E83               ; $8E7D
+    beq     @step                   ; $8E74
+    cmp     #$09                    ; $8E76  scene 9: the kiss
+    beq     @kiss                   ; $8E78
+    jsr     Ending_DrawCouple       ; $8E7A  scene 6: apart
+    jmp     @step                   ; $8E7D
 
-@loc_8E80:
+@kiss:
     jsr     Ending_DrawKiss         ; $8E80
 
-@loc_8E83:
-    lda     endingSubStep           ; $8E83
+@step:
+    lda     endingSubStep           ; $8E83  this step
     jsr     JumpTable               ; $8E85
 ; (inline jump table)
-    .word   @loc_8E8E               ; $8E88
+    .word   @start                  ; $8E88
     .word   Curtain_DrawEdge        ; $8E8A
     .word   Curtain_Lower           ; $8E8C
 
-@loc_8E8E:
-    lda     #$21                    ; $8E8E
+@start:
+    lda     #$21                    ; $8E8E  start at $2160,
     sta     curtainAddr             ; $8E90
     lda     #$60                    ; $8E92
     sta     curtainAddr+1           ; $8E94
-    lda     #$D8                    ; $8E96
+    lda     #$D8                    ; $8E96  its attributes at $23D8
     sta     curtainAttrLo           ; $8E98
-    lda     #$00                    ; $8E9A
+    lda     #$00                    ; $8E9A  from phase 0
     sta     curtainPhase            ; $8E9C
     inc     endingSubStep           ; $8E9E
     rts                             ; $8EA0
@@ -1300,49 +1300,49 @@ CurtainEdgeAttr:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Curtain_DrawEdge:
-    lda     frameCounter            ; $8EAE
+    lda     frameCounter            ; $8EAE  every 8 frames:
     and     #$07                    ; $8EB0
     bne     @done                   ; $8EB2
-    lda     curtainPhase            ; $8EB4
-    bne     @loc_8EF8               ; $8EB6
-    lda     curtainAddr+1           ; $8EB8
+    lda     curtainPhase            ; $8EB4  a new step?
+    bne     @next                   ; $8EB6
+    lda     curtainAddr+1           ; $8EB8  the row under the curtain:
     clc                             ; $8EBA
     adc     #$20                    ; $8EBB
     sta     ppuBuffer0+1            ; $8EBD
     lda     curtainAddr             ; $8EC0
     adc     #$00                    ; $8EC2
     sta     ppuBuffer0              ; $8EC4
-    ldx     #$06                    ; $8EC7
+    ldx     #$06                    ; $8EC7  a blank row and an attribute string
 
 @loop:
     lda     CurtainEdgeText,x       ; $8EC9
     sta     ppuBuffer0+2,x          ; $8ECC
     dex                             ; $8ECF
     bpl     @loop                   ; $8ED0
-    lda     curtainEdgeCount        ; $8ED2
+    lda     curtainEdgeCount        ; $8ED2  the attribute by the step count
     and     #$0E                    ; $8ED4
     lsr     a                       ; $8ED6
     tax                             ; $8ED7
-    lda     curtainAttrLo           ; $8ED8
+    lda     curtainAttrLo           ; $8ED8  at curtainAttrLo
     sta     ppuBuffer0+5            ; $8EDA
-    cmp     #$F0                    ; $8EDD
-    bne     @loc_8EE3               ; $8EDF
-    ldx     #$01                    ; $8EE1
+    cmp     #$F0                    ; $8EDD  the last attribute row:
+    bne     @setAttr                ; $8EDF
+    ldx     #$01                    ; $8EE1  its own
 
-@loc_8EE3:
+@setAttr:
     lda     CurtainEdgeAttr,x       ; $8EE3
     sta     ppuBuffer0+7            ; $8EE6
-    inc     curtainEdgeCount        ; $8EE9
+    inc     curtainEdgeCount        ; $8EE9  every 4 steps:
     lda     curtainEdgeCount        ; $8EEB
     and     #$03                    ; $8EED
-    bne     @loc_8EF8               ; $8EEF
-    lda     curtainAttrLo           ; $8EF1
+    bne     @next                   ; $8EEF
+    lda     curtainAttrLo           ; $8EF1  the next attribute row
     clc                             ; $8EF3
     adc     #$08                    ; $8EF4
     sta     curtainAttrLo           ; $8EF6
 
-@loc_8EF8:
-    inc     endingSubStep           ; $8EF8
+@next:
+    inc     endingSubStep           ; $8EF8  next: Curtain_Lower
 
 @done:
     rts                             ; $8EFA
@@ -1360,49 +1360,49 @@ CurtainTiles:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Curtain_Lower:
-    lda     endingTimer             ; $8F1B
-    bne     @loc_8F62               ; $8F1D
-    lda     #$00                    ; $8F1F
+    lda     endingTimer             ; $8F1B  stopped?
+    bne     @wait                   ; $8F1D
+    lda     #$00                    ; $8F1F  lowering
     sta     temp0                   ; $8F21
-    jsr     Curtain_QueueRows       ; $8F23
-    inc     curtainPhase            ; $8F26
+    jsr     Curtain_QueueRows       ; $8F23  two rows of curtain
+    inc     curtainPhase            ; $8F26  next phase
     lda     curtainPhase            ; $8F28
-    cmp     #$04                    ; $8F2A
-    bne     @loc_8F65               ; $8F2C
-    lda     #$00                    ; $8F2E
+    cmp     #$04                    ; $8F2A  all 4?
+    bne     @again                  ; $8F2C
+    lda     #$00                    ; $8F2E  yes: from phase 0,
     sta     curtainPhase            ; $8F30
-    lda     curtainAddr+1           ; $8F32
+    lda     curtainAddr+1           ; $8F32  a row lower
     clc                             ; $8F34
     adc     #$20                    ; $8F35
     sta     curtainAddr+1           ; $8F37
     lda     curtainAddr             ; $8F39
     adc     #$00                    ; $8F3B
     sta     curtainAddr             ; $8F3D
-    lda     sceneStep               ; $8F3F
+    lda     sceneStep               ; $8F3F  scene 6:
     cmp     #$0D                    ; $8F42
-    beq     @loc_8F52               ; $8F44
-    lda     curtainAddr             ; $8F46
+    beq     @checkFloor             ; $8F44
+    lda     curtainAddr             ; $8F46  stop at $22E0
     cmp     #$22                    ; $8F48
-    bne     @loc_8F52               ; $8F4A
+    bne     @checkFloor             ; $8F4A
     lda     curtainAddr+1           ; $8F4C
     cmp     #$E0                    ; $8F4E
-    beq     @loc_8F62               ; $8F50
+    beq     @wait                   ; $8F50
 
-@loc_8F52:
-    lda     curtainAddr             ; $8F52
+@checkFloor:
+    lda     curtainAddr             ; $8F52  at the floor ($23xx, past $2300)?
     cmp     #$23                    ; $8F54
-    bne     @loc_8F65               ; $8F56
+    bne     @again                  ; $8F56
     lda     curtainAddr+1           ; $8F58
-    beq     @loc_8F65               ; $8F5A
-    lda     #$00                    ; $8F5C
+    beq     @again                  ; $8F5A
+    lda     #$00                    ; $8F5C  stop
     sta     curtainPhase            ; $8F5E
     sta     curtainAddr+1           ; $8F60
 
-@loc_8F62:
-    jmp     Ending_Wait             ; $8F62
+@wait:
+    jmp     Ending_Wait             ; $8F62  wait for the scene's end
 
-@loc_8F65:
-    dec     endingSubStep           ; $8F65
+@again:
+    dec     endingSubStep           ; $8F65  back to Curtain_DrawEdge
     rts                             ; $8F67
 
 ; ---------------------------------------------------------------------------
@@ -1423,14 +1423,14 @@ Ending_Kiss:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ending_DrawKiss:
-    jsr     Ending_DrawCouple       ; $8F6B
-    lda     #$75                    ; $8F6E
+    jsr     Ending_DrawCouple       ; $8F6B  the couple's sprites, moved closer:
+    lda     #$75                    ; $8F6E  Link's columns at X $75, $7D
     sta     oamBuffer+19            ; $8F70
     sta     oamBuffer+35            ; $8F73
     lda     #$7D                    ; $8F76
     sta     oamBuffer+23            ; $8F78
     sta     oamBuffer+39            ; $8F7B
-    lda     #$7B                    ; $8F7E
+    lda     #$7B                    ; $8F7E  Zelda's at $7B, $83
     sta     oamBuffer+27            ; $8F80
     sta     oamBuffer+43            ; $8F83
     lda     #$83                    ; $8F86
@@ -1450,20 +1450,20 @@ TheEndText:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ending_ShowTheEnd:
-    lda     endingTimer             ; $8F9E
-    bne     @loc_8FB1               ; $8FA0
-    ldy     #$0E                    ; $8FA2
+    lda     endingTimer             ; $8F9E  time up?
+    bne     @kiss                   ; $8FA0
+    ldy     #$0E                    ; $8FA2  THE END
 
 @loop:
     lda     TheEndText,y            ; $8FA4
     sta     ppuBuffer0,y            ; $8FA7
     dey                             ; $8FAA
     bpl     @loop                   ; $8FAB
-    lda     #$01                    ; $8FAD
+    lda     #$01                    ; $8FAD  the curtain's next step (scene 9)
     sta     endingSubStep           ; $8FAF
 
-@loc_8FB1:
-    jmp     Ending_Kiss             ; $8FB1
+@kiss:
+    jmp     Ending_Kiss             ; $8FB1  the kiss
 
 ; ---------------------------------------------------------------------------
 ; Curtain_Raise
@@ -1474,40 +1474,40 @@ Ending_ShowTheEnd:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Curtain_Raise:
-    lda     endingTimer             ; $8FB4
-    bne     @loc_8FF2               ; $8FB6
-    lda     frameCounter            ; $8FB8
+    lda     endingTimer             ; $8FB4  stopped?
+    bne     @wait                   ; $8FB6
+    lda     frameCounter            ; $8FB8  every 8 frames:
     and     #$07                    ; $8FBA
     bne     @done                   ; $8FBC
-    lda     #$10                    ; $8FBE
+    lda     #$10                    ; $8FBE  raising
     sta     temp0                   ; $8FC0
-    jsr     Curtain_QueueRows       ; $8FC2
-    inc     curtainPhase            ; $8FC5
+    jsr     Curtain_QueueRows       ; $8FC2  two rows of curtain
+    inc     curtainPhase            ; $8FC5  next phase
     lda     curtainPhase            ; $8FC7
-    cmp     #$04                    ; $8FC9
+    cmp     #$04                    ; $8FC9  all 4?
     bne     @done                   ; $8FCB
-    lda     #$00                    ; $8FCD
+    lda     #$00                    ; $8FCD  yes: from phase 0,
     sta     curtainPhase            ; $8FCF
-    lda     curtainAddr+1           ; $8FD1
+    lda     curtainAddr+1           ; $8FD1  a row higher
     sec                             ; $8FD3
     sbc     #$20                    ; $8FD4
     sta     curtainAddr+1           ; $8FD6
     lda     curtainAddr             ; $8FD8
     sbc     #$00                    ; $8FDA
     sta     curtainAddr             ; $8FDC
-    cmp     #$21                    ; $8FDE
+    cmp     #$21                    ; $8FDE  up to $2140?
     bne     @done                   ; $8FE0
     lda     curtainAddr+1           ; $8FE2
     cmp     #$40                    ; $8FE4
     bne     @done                   ; $8FE6
-    lda     #$11                    ; $8FE8
+    lda     #$11                    ; $8FE8  yes: (for the credits)
     sta     objY+2                  ; $8FEA
     lda     #$00                    ; $8FEC
     sta     objY+3                  ; $8FEE
     sta     endingSubStep           ; $8FF0
 
-@loc_8FF2:
-    jmp     Ending_Wait             ; $8FF2
+@wait:
+    jmp     Ending_Wait             ; $8FF2  wait for the scene's end
 
 @done:
     rts                             ; $8FF5
@@ -1523,22 +1523,22 @@ Curtain_Raise:
 ; ---------------------------------------------------------------------------
 Curtain_QueueRows:
     ldx     #$00                    ; $8FF6
-    lda     curtainPhase            ; $8FF8
+    lda     curtainPhase            ; $8FF8  the phase's tiles,
     asl     a                       ; $8FFA
     asl     a                       ; $8FFB
-    ora     temp0                   ; $8FFC
+    ora     temp0                   ; $8FFC  lowering or raising
     tay                             ; $8FFE
-    lda     curtainAddr             ; $8FFF
+    lda     curtainAddr             ; $8FFF  the first row,
     sta     ppuBuffer0              ; $9001
     lda     curtainAddr+1           ; $9004
     sta     ppuBuffer0+1            ; $9006
-    clc                             ; $9009
+    clc                             ; $9009  the second below it
     adc     #$20                    ; $900A
     sta     ppuBuffer0+36           ; $900C
     lda     curtainAddr             ; $900F
     adc     #$00                    ; $9011
     sta     ppuBuffer0+35           ; $9013
-    lda     #$20                    ; $9016
+    lda     #$20                    ; $9016  32 tiles each
     sta     ppuBuffer0+2            ; $9018
     sta     ppuBuffer0+37           ; $901B
 
@@ -1551,11 +1551,11 @@ Curtain_QueueRows:
     sta     ppuBuffer0+38,x         ; $902D
     lda     CurtainTiles+3,y        ; $9030
     sta     ppuBuffer0+39,x         ; $9033
-    inx                             ; $9036
+    inx                             ; $9036  two columns
     inx                             ; $9037
-    cpx     #$20                    ; $9038
+    cpx     #$20                    ; $9038  32 done?
     bne     @loop                   ; $903A
-    lda     #$FF                    ; $903C
+    lda     #$FF                    ; $903C  end
     sta     ppuBuffer0+70           ; $903E
     rts                             ; $9041
 
@@ -1571,9 +1571,9 @@ Curtain_QueueRows:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Credits_Run:
-    lda     #$00                    ; $9042
+    lda     #$00                    ; $9042  (never read)
     sta     unused0765              ; $9044
-    lda     endingSubStep           ; $9047
+    lda     endingSubStep           ; $9047  this step
     jsr     JumpTable               ; $9049
 ; (inline jump table)
     .word   Credits_Init            ; $904C
@@ -1598,18 +1598,18 @@ CreditsStaffText:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Credits_Init:
-    ldy     #$1C                    ; $9075
+    ldy     #$1C                    ; $9075  STAFF and the attributes
 
 @loop:
     lda     CreditsStaffText,y      ; $9077
     sta     ppuBuffer0,y            ; $907A
     dey                             ; $907D
     bpl     @loop                   ; $907E
-    lda     #$11                    ; $9080
+    lda     #$11                    ; $9080  (Y $11 for object 0,
     sta     objY                    ; $9082
-    lda     #$00                    ; $9084
+    lda     #$00                    ; $9084  0 for object 1)
     sta     objY+1                  ; $9086
-    sta     curtainPhase            ; $9088
+    sta     curtainPhase            ; $9088  from fade step 0
     inc     endingSubStep           ; $908A
     rts                             ; $908C
 
@@ -1623,7 +1623,7 @@ Credits_Init:
 Credits_DrawText:
     lda     #$00                    ; $908D
     sta     temp2                   ; $908F
-    lda     creditsString           ; $9091
+    lda     creditsString           ; $9091  the string's text
     asl     a                       ; $9093
     tay                             ; $9094
     lda     CreditsTextPtrs,y       ; $9095
@@ -1633,7 +1633,7 @@ Credits_DrawText:
     ldy     #$00                    ; $909F
 
 @loop:
-    lda     (temp0),y               ; $90A1
+    lda     (temp0),y               ; $90A1  to its $FF
     sta     ppuBuffer0,y            ; $90A3
     iny                             ; $90A6
     cmp     #$FF                    ; $90A7
@@ -1669,33 +1669,33 @@ CreditsFadeStart:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Credits_FadeInText:
-    lda     endingTimer             ; $90FE
-    bne     @loc_9109               ; $9100
-    ldy     creditsFadeStep         ; $9102
+    lda     endingTimer             ; $90FE  starting a fade step?
+    bne     @count                  ; $9100
+    ldy     creditsFadeStep         ; $9102  its delay
     lda     CreditsFadeDelays,y     ; $9104
     sta     endingTimer             ; $9107
 
-@loc_9109:
-    dec     endingTimer             ; $9109
+@count:
+    dec     endingTimer             ; $9109  count
     bne     @done                   ; $910B
-    lda     creditsString           ; $910D
+    lda     creditsString           ; $910D  the title's (even) or names' (odd)
     and     #$01                    ; $910F
     asl     a                       ; $9111
     tax                             ; $9112
-    lda     CreditsFadePtrs,x       ; $9113
+    lda     CreditsFadePtrs,x       ; $9113  fade colors
     sta     temp0                   ; $9116
     lda     CreditsFadePtrs+1,x     ; $9118
     sta     temp1                   ; $911B
-    lda     #$3F                    ; $911D
+    lda     #$3F                    ; $911D  to $3F00 or $3F04:
     sta     ppuBuffer0              ; $911F
     lda     creditsString           ; $9122
     and     #$01                    ; $9124
     tax                             ; $9126
     lda     CreditsFadeAddrLo,x     ; $9127
     sta     ppuBuffer0+1            ; $912A
-    lda     #$04                    ; $912D
+    lda     #$04                    ; $912D  4 colors
     sta     ppuBuffer0+2            ; $912F
-    lda     creditsFadeStep         ; $9132
+    lda     creditsFadeStep         ; $9132  this step's
     asl     a                       ; $9134
     asl     a                       ; $9135
     tay                             ; $9136
@@ -1708,21 +1708,21 @@ Credits_FadeInText:
     inx                             ; $913F
     cpx     #$04                    ; $9140
     bne     @loop                   ; $9142
-    lda     #$FF                    ; $9144
+    lda     #$FF                    ; $9144  end
     sta     ppuBuffer0+7            ; $9146
-    inc     creditsFadeStep         ; $9149
-    ldy     creditsFadeStep         ; $914B
+    inc     creditsFadeStep         ; $9149  next step,
+    ldy     creditsFadeStep         ; $914B  its delay
     lda     CreditsFadeDelays,y     ; $914D
     sta     endingTimer             ; $9150
-    cpy     #$04                    ; $9152
+    cpy     #$04                    ; $9152  all 4 in?
     bne     @done                   ; $9154
-    inc     creditsString           ; $9156
-    lda     creditsString           ; $9158
+    inc     creditsString           ; $9156  yes: the next string
+    lda     creditsString           ; $9158  names next (Credits_DrawText)
     and     #$01                    ; $915A
     tay                             ; $915C
-    lda     CreditsNextState,y      ; $915D
+    lda     CreditsNextState,y      ; $915D  or hold the page
     sta     endingSubStep           ; $9160
-    lda     CreditsFadeStart,y      ; $9162
+    lda     CreditsFadeStart,y      ; $9162  its fade's first step
     sta     creditsFadeStep         ; $9165
 
 @done:
@@ -1746,14 +1746,14 @@ CreditsClearStaffText:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Credits_NextPage:
-    lda     creditsString           ; $9173
+    lda     creditsString           ; $9173  the last string (18)?
     cmp     #$12                    ; $9175
-    bne     @loc_9194               ; $9177
-    lda     #$00                    ; $9179
+    bne     @notLast                ; $9177
+    lda     #$00                    ; $9179  yes: done
     sta     curtainPhase            ; $917B
     sta     curtainEdgeCount        ; $917D
     sta     endingSubStep           ; $917F
-    ldx     #$02                    ; $9181
+    ldx     #$02                    ; $9181  the Triforce pieces' final places
 
 @loop:
     lda     EndingFinalSpriteY,x    ; $9183
@@ -1762,14 +1762,14 @@ Credits_NextPage:
     sta     triforceX,x             ; $918B
     dex                             ; $918D
     bpl     @loop                   ; $918E
-    inc     sceneStep               ; $9190
+    inc     sceneStep               ; $9190  scene 12
     rts                             ; $9193
 
-@loc_9194:
-    lda     creditsString           ; $9194
+@notLast:
+    lda     creditsString           ; $9194  THANKS A MILLION (16)?
     cmp     #$10                    ; $9196
-    bne     @loc_91A5               ; $9198
-    ldy     #$04                    ; $919A
+    bne     @next                   ; $9198
+    ldy     #$04                    ; $919A  erase STAFF
 
 @loop2:
     lda     CreditsClearStaffText,y ; $919C
@@ -1777,8 +1777,8 @@ Credits_NextPage:
     dey                             ; $91A2
     bpl     @loop2                  ; $91A3
 
-@loc_91A5:
-    inc     endingSubStep           ; $91A5
+@next:
+    inc     endingSubStep           ; $91A5  next step
     rts                             ; $91A7
 
 ; ---------------------------------------------------------------------------
@@ -1790,26 +1790,26 @@ Credits_NextPage:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Credits_FadeOutPage:
-    lda     endingTimer             ; $91A8
-    bne     @loc_91B3               ; $91AA
-    ldy     creditsFadeStep         ; $91AC
+    lda     endingTimer             ; $91A8  starting a fade step?
+    bne     @count                  ; $91AA
+    ldy     creditsFadeStep         ; $91AC  its delay
     lda     CreditsFadeDelays,y     ; $91AE
     sta     endingTimer             ; $91B1
 
-@loc_91B3:
-    dec     endingTimer             ; $91B3
+@count:
+    dec     endingTimer             ; $91B3  count
     bne     @done                   ; $91B5
-    lda     CreditsFadePtrs         ; $91B7
+    lda     CreditsFadePtrs         ; $91B7  both fades:
     sta     temp0                   ; $91BA
     lda     CreditsFadePtrs+1       ; $91BC
     sta     temp1                   ; $91BF
-    lda     #$3F                    ; $91C1
+    lda     #$3F                    ; $91C1  the title's colors ($3F00)
     sta     ppuBuffer0              ; $91C3
     lda     #$00                    ; $91C6
     sta     ppuBuffer0+1            ; $91C8
-    lda     #$04                    ; $91CB
+    lda     #$04                    ; $91CB  4 colors
     sta     ppuBuffer0+2            ; $91CD
-    lda     creditsFadeStep         ; $91D0
+    lda     creditsFadeStep         ; $91D0  this step's
     asl     a                       ; $91D2
     asl     a                       ; $91D3
     tay                             ; $91D4
@@ -1822,13 +1822,13 @@ Credits_FadeOutPage:
     inx                             ; $91DD
     cpx     #$04                    ; $91DE
     bne     @loop                   ; $91E0
-    lda     #$3F                    ; $91E2
+    lda     #$3F                    ; $91E2  the names' ($3F08)
     sta     ppuBuffer0+7            ; $91E4
     lda     #$08                    ; $91E7
     sta     ppuBuffer0+8            ; $91E9
     lda     #$04                    ; $91EC
     sta     ppuBuffer0+9            ; $91EE
-    ldx     #$00                    ; $91F1
+    ldx     #$00                    ; $91F1  (from the second table)
     lda     creditsFadeStep         ; $91F3
     asl     a                       ; $91F5
     asl     a                       ; $91F6
@@ -1842,13 +1842,13 @@ Credits_FadeOutPage:
     inx                             ; $9200
     cpx     #$04                    ; $9201
     bne     @loop2                  ; $9203
-    lda     #$FF                    ; $9205
+    lda     #$FF                    ; $9205  end
     sta     ppuBuffer0+10,x         ; $9207
-    inc     creditsFadeStep         ; $920A
+    inc     creditsFadeStep         ; $920A  next step
     lda     creditsFadeStep         ; $920C
-    cmp     #$08                    ; $920E
+    cmp     #$08                    ; $920E  all 8 (4 held, 4 out)?
     bne     @done                   ; $9210
-    lda     #$00                    ; $9212
+    lda     #$00                    ; $9212  yes: the next page
     sta     creditsFadeStep         ; $9214
     lda     CreditsNextState+1      ; $9216
     sta     endingSubStep           ; $9219
@@ -1870,9 +1870,9 @@ Credits_FadeOutPage:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ending_SetSecondQuest:
-    lda     #$01                    ; $921C
+    lda     #$01                    ; $921C  a second quest file
     sta     secondQuest             ; $921E
-    lda     #$00                    ; $9221
+    lda     #$00                    ; $9221  no experience
     sta     experience              ; $9223
     sta     experience+1            ; $9226
     ldy     #$69                    ; $9229
@@ -1890,11 +1890,11 @@ Ending_SetSecondQuest:
     ldy     #$0F                    ; $9239
 
 @loop3:
-    sta     a:musicNotesPtr,y       ; $923B
+    sta     a:musicNotesPtr,y       ; $923B  and $00E0-$00EF
     dey                             ; $923E
     bpl     @loop3                  ; $923F
-    jsr     Ram_ClearExceptSaved    ; $9241
-    inc     gameState               ; $9244
+    jsr     Ram_ClearExceptSaved    ; $9241  the rest of the unsaved RAM
+    inc     gameState               ; $9244  GameState_SaveAfterEnding
     rts                             ; $9247
 ; (end of disassembled code)
 
@@ -1908,11 +1908,11 @@ Ending_SetSecondQuest:
 ; ---------------------------------------------------------------------------
 Ending_WaitForStart:
     jsr     Ending_DrawTriforces    ; $9248
-    lda     joypadHeld              ; $924B
+    lda     joypadHeld              ; $924B  Start held?
     and     #$10                    ; $924D
     beq     @done                   ; $924F
 ; (code below not executed in the test movies)
-    inc     sceneStep               ; $9251
+    inc     sceneStep               ; $9251  close the curtain (scene 13)
 ; (end of code not executed in the test movies)
 
 @done:

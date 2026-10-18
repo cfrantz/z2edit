@@ -111,9 +111,11 @@ unless noted):
   filled by script where the code matches, instruction for
   instruction; variants by hand.  Bank 4's and 5's boss draws are left
   for 8p.
-- 8n. Bank 5's screens (~2300): `Bank5_Nmi`, `Title_*`, `Story_*`,
-  `FileScreen_*`, `FileSelect_*`, `Register_*`, `Eliminate_*`, `Save_*`,
-  and the ending (`Ending_*`, `Curtain_*`, `Credits_*`).
+- 8n. Done: bank 5's screens: `Bank5_Nmi`, the title and story scroll,
+  the file select, register and elimination screens, saving, and the
+  ending (scenes, curtain, credits).  `Text_NumberToDigits` got bank 0's
+  `Math_ToDigits` comments.  Bank 5's remaining `@loc_` labels are in its
+  enemies (8p).
 - 8o. Sound (bank 6, ~1700, no comments, 155 `@loc_` labels): both
   engines' players, request handlers and the sound effects.
 - 8p. The enemies' top-up: the enemy routines of banks 1-5 measure
