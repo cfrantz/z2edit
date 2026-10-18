@@ -23,7 +23,8 @@ Tools that drive the emulator need the Python extension built with
 - `trace.py`: Writes a per-instruction trace for a range of frames of a
   movie, annotated with symbol names.
 - `status.py`: Updates the generated section of `STATUS.md`.  Run by
-  `make status`.
+  `make status`.  `--routines BANK` prints each routine's commentary
+  (instructions, commented ones, unnamed `@loc_` labels) instead.
 - `rename.py`: Renames symbols across `src/` and `docs/` (whole words), keeping the
   address comment column aligned.  Refuses unknown or already-used names.
   `--array NAME BASE COUNT` names an array and turns the mechanical names
