@@ -63,10 +63,9 @@ unless noted):
   Link's drawing, with Link's poses (`LINK_POSE_*`) checked over the 100%
   movie; docs/systems/link.md (Poses and Drawing) and docs/hardware/ppu.md
   (Sprites).  `Fairy_Draw` (18%) is left for 8p.
-- 8c. Game modes and transitions (bank 7, ~990): `Mode_*` (except
-  `Mode_SideView`), `Location_*`, `ReturnToOverworld_*`, `LoadWorld_*`,
-  `Mode_LoadWorld` (222 instructions), `Death_*` and the continue
-  screen, `Lives_*`, `DrawArea_*`.
+- 8c. Done: game modes and transitions (bank 7): location entry, world
+  loading, area transitions, doors, death, game over and the continue
+  screen (scripted with play.py; docs/systems/death.md).
 - 8d. Area loading and scrolling (banks 7 and 0, ~740): `Area_Load`,
   `Area_DrawFloors`, `Area_DecodeObjects`, `Area_PlaceItem`, the
   `AreaMap_*` helpers, `Area_DrawMetatileColumn`, and bank 0's
