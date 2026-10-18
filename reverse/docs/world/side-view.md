@@ -30,3 +30,28 @@ Enemies are updated through per-type routine tables copied into SRAM from
 the area bank (`sramEnemyAiPtrs`, `sramEnemyDrawPtrs`,
 `sramProjectilePtrs`), so the same engine code runs each world's enemies.
 Collision is covered in [object slots](../memory/objects.md#collision).
+
+## Set Pieces
+
+Bank 0 handles a few one-off scenes:
+
+- **Breaking blocks** (`BreakingBlocks_Update`, 5 slots): a block broken
+  by the sword shows three frames of debris over 18 frames; a crumbling
+  floor animates for 32 frames, then its map tile becomes empty ($42) and
+  Link falls through.  See `BreakingBlock_Update` for the timings.
+- **The big door** (`BigDoor_Update`): the SPELL spell on New Kasuto's
+  east street (area $14 of the East Hyrule towns) freezes the game and
+  opens the stone building's door over 272 frames, one row every 16,
+  then writes the doorway into the tile map (`BigDoor_DrawOpen`).
+  Checked with a scripted cast.
+- **Saria's bridge** (`Saria_BuildBridge`): with `techniques` bit 0
+  (from the river man), the bridge builds itself a tile every 8 frames
+  while the game is paused, 16 tiles, then goes into the tile map.
+- **Falling into an area** (gameModes $0C-$0F): the screen is cleared to
+  rows of tiles $FD-$FF (`Fall_FillNametable`), and Link falls 2 pixels
+  per frame (`Mode_FallAnimate`), trailed by a black silhouette, while
+  the background colors rotate
+  every 2 frames, until he passes Y $E8.
+- **North Castle's torches** (`NorthCastle_DrawSprites`): in the game's
+  first area, two torches beside Zelda's altar (world X $158 and $1A0),
+  their flames flipped every 4 frames; seen in a screenshot.

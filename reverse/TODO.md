@@ -96,13 +96,10 @@ unless noted):
   New: terrain names; `overworldWalkFrames` (objYHi+13) starts encounters
   without the timer; the right-edge sprite mask; QUIRK: bank 1's palace
   stones overwrite Death Mountain's map (seen in the 100% movie).
-- 8k. Bank 0's remaining set pieces (~470): `NorthCastle_DrawSprites`,
-  `SideView_Start`, `BigDoor_*`, `Mode_FallAnimate` and `Fall_*`,
-  `BreakingBlock_Update`, `Saria_BuildBridge`,
-  `Game_StartAtNorthCastle`.
-
-The other banks:
-
+- 8k. Done: bank 0's set pieces (North Castle's torches, side view
+  start, the big door, falling, breaking blocks, Saria's bridge, the
+  game's start).  $8000 is the game over screen (PPU string 9), not
+  unused; bank 0 has no `@loc_` labels left.
 - 8l. Towns and conversations (bank 3, ~1600): `Town_*` objects,
   `Dialog_*`, `Menu_*_Bank3`, and the townspeople (`Townsperson_*`,
   `HouseLady_*`, `Door_*`, ~23% commented).

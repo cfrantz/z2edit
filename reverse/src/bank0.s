@@ -7,7 +7,11 @@
 
 .segment "BANK0"
 
-; (unreferenced: $8000-$80C8, 201 bytes)
+; PPU string 9 (PpuStringPtrs: $8000, read with bank 0 mapped): the game
+; over screen, "GAME OVER" (PPU $216B), "RETURN OF GANON" ($21C8) and
+; Ganon's silhouette, then its attributes.  Not in the test movies (the
+; CDL marks it unreferenced); drawn by Death_LoseLife's game over.
+GameOverScreenText:
     .byte   $21, $6B, $0A, $E0, $DA, $E6, $DE, $F4, $F4, $E8, $EF, $DE, $EB, $21, $C8, $0F; $8000
     .byte   $EB, $DE, $ED, $EE, $EB, $E7, $F4, $E8, $DF, $F4, $E0, $DA, $E7, $E8, $E7, $22; $8010
     .byte   $4C, $08, $00, $01, $02, $03, $04, $05, $06, $07, $22, $6C, $08, $10, $11, $12; $8020
@@ -21,6 +25,9 @@
     .byte   $87, $52, $FF, $23, $9A, $82, $1B, $2B, $23, $A6, $54, $FF, $23, $69, $83, $0C; $80A0
     .byte   $1C, $2C, $23, $76, $83, $0D, $1D, $2D, $23, $E3, $42, $50, $23, $EA, $44, $55; $80B0
     .byte   $23, $F1, $46, $55, $23, $F9, $46, $05, $FF                     ; $80C0
+
+; PPU string 5 ($80C9): the death sequence's red palette (Death_QueueRedPalette).
+DeathRedPalette:
     .byte   $3F, $00, $08, $16, $30, $0F, $0F, $16, $30, $27, $0F, $FF      ; $80C9
 
 NorthCastleSprites:
@@ -35,39 +42,39 @@ NorthCastleSprites:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 NorthCastle_DrawSprites:
-    lda     currentWorld            ; $80E5
-    ora     areaId                  ; $80E8
-    ora     currentRegion           ; $80EB
+    lda     currentWorld            ; $80E5  world 0,
+    ora     areaId                  ; $80E8  area 0,
+    ora     currentRegion           ; $80EB  region 0: North Castle?
     bne     @done                   ; $80EE
-    ldx     #$0F                    ; $80F0
+    ldx     #$0F                    ; $80F0  the two torches beside Zelda (sprites 20-23)
 
 @loop:
     lda     NorthCastleSprites,x    ; $80F2
     sta     oamBuffer+80,x          ; $80F5
     dex                             ; $80F8
     bpl     @loop                   ; $80F9
-    lda     frameCounter            ; $80FB
+    lda     frameCounter            ; $80FB  every other 4 frames:
     and     #$04                    ; $80FD
-    bne     @loc_8109               ; $80FF
-    lda     #$41                    ; $8101
+    bne     @leftTorch              ; $80FF
+    lda     #$41                    ; $8101  the flames flipped
     sta     oamBuffer+82            ; $8103
     sta     oamBuffer+90            ; $8106
 
-@loc_8109:
-    lda     #$58                    ; $8109
+@leftTorch:
+    lda     #$58                    ; $8109  the left torch at X $158:
     sec                             ; $810B
-    sbc     scrollX                 ; $810C
+    sbc     scrollX                 ; $810C  screen X
     sta     oamBuffer+83            ; $810F
     sta     oamBuffer+87            ; $8112
-    lda     #$01                    ; $8115
+    lda     #$01                    ; $8115  on the screen (page 1 - scroll page = 0)?
     sbc     scrollXHi               ; $8117
-    beq     @loc_8124               ; $811A
-    lda     #$F8                    ; $811C
+    beq     @rightTorch             ; $811A
+    lda     #$F8                    ; $811C  no: hidden
     sta     oamBuffer+80            ; $811E
     sta     oamBuffer+84            ; $8121
 
-@loc_8124:
-    lda     #$A0                    ; $8124
+@rightTorch:
+    lda     #$A0                    ; $8124  the right torch at X $1A0
     sec                             ; $8126
     sbc     scrollX                 ; $8127
     sta     oamBuffer+91            ; $812A
@@ -75,7 +82,7 @@ NorthCastle_DrawSprites:
     lda     #$01                    ; $8130
     sbc     scrollXHi               ; $8132
     beq     @done                   ; $8135
-    lda     #$F8                    ; $8137
+    lda     #$F8                    ; $8137  hidden
     sta     oamBuffer+88            ; $8139
     sta     oamBuffer+92            ; $813C
 
@@ -2332,63 +2339,63 @@ Sprite0Init:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 SideView_Start:
-    ldy     #$03                    ; $8CE1
+    ldy     #$03                    ; $8CE1  sprite 0 (Sprite0Init): the split's marker
 
 @loop:
     lda     Sprite0Init,y           ; $8CE3
     sta     oamBuffer,y             ; $8CE6
     dey                             ; $8CE9
     bpl     @loop                   ; $8CEA
-    lda     #$06                    ; $8CEC
+    lda     #$06                    ; $8CEC  sprites and background on
     sta     ppuMaskExtra            ; $8CEE
-    ldy     #$00                    ; $8CF1
+    ldy     #$00                    ; $8CF1  a = 0:
     tya                             ; $8CF3
-    sta     spellActive             ; $8CF4
+    sta     spellActive             ; $8CF4  no spells
 
 @loop2:
-    sta     ppuPage,y               ; $8CF7
-    sta     overworldBuffer+$00,y   ; $8CFA
+    sta     ppuPage,y               ; $8CF7  clear $0300-$03FF (the PPU buffers)
+    sta     overworldBuffer+$00,y   ; $8CFA  and $0400-$04FF
     dey                             ; $8CFD
     bne     @loop2                  ; $8CFE
-    sta     scrollFrozen            ; $8D00
-    sta     spellFlash              ; $8D03
-    dey                             ; $8D06
-    sty     ppuBuffer1              ; $8D07
+    sta     scrollFrozen            ; $8D00  scrolling allowed
+    sta     spellFlash              ; $8D03  no flash
+    dey                             ; $8D06  $FF:
+    sty     ppuBuffer1              ; $8D07  end the three buffers' lists
     sty     ppuBuffer2              ; $8D0A
     sty     ppuBuffer0              ; $8D0D
-    ldy     areaStartPage           ; $8D10
+    ldy     areaStartPage           ; $8D10  the entry slot's saved scroll:
     tya                             ; $8D13
     pha                             ; $8D14
-    lda     sramEntryLeftPage,y     ; $8D15
+    lda     sramEntryLeftPage,y     ; $8D15  the column pages at the edges,
     sta     columnPage              ; $8D18
     lda     sramEntryRightPage,y    ; $8D1B
     sta     columnPage+1            ; $8D1E
-    lda     sramEntryLeftColumn,y   ; $8D21
+    lda     sramEntryLeftColumn,y   ; $8D21  their columns,
     sta     columnIndex             ; $8D24
     lda     sramEntryRightColumn,y  ; $8D27
     sta     columnIndex+1           ; $8D2A
-    lda     sramEntryScrollDir,y    ; $8D2D
+    lda     sramEntryScrollDir,y    ; $8D2D  its direction,
     sta     scrollDir               ; $8D30
     sta     columnDrawDir           ; $8D33
-    lda     sramEntryScrollXHi,y    ; $8D36
+    lda     sramEntryScrollXHi,y    ; $8D36  the scroll page,
     sta     scrollXHi               ; $8D39
-    and     #$01                    ; $8D3C
+    and     #$01                    ; $8D3C  (its nametable)
     sta     playfieldNametable      ; $8D3E
-    lda     sramEntryPpuScrollX,y   ; $8D41
+    lda     sramEntryPpuScrollX,y   ; $8D41  the fine scroll,
     sta     a:ppuScrollX            ; $8D44
-    lda     sramEntryScrollX,y      ; $8D47
+    lda     sramEntryScrollX,y      ; $8D47  and scrollX
     sta     scrollX                 ; $8D4A
-    and     #$10                    ; $8D4D
+    and     #$10                    ; $8D4D  (the half metatile)
     sta     columnScroll            ; $8D4F
-    lda     #$00                    ; $8D52
+    lda     #$00                    ; $8D52  from the first column step
     sta     columnDrawStep          ; $8D54
-    jsr     Scroll_SetRightEdge     ; $8D57
+    jsr     Scroll_SetRightEdge     ; $8D57  the column at the right edge
     pla                             ; $8D5A
     tay                             ; $8D5B
-    lda     #$A5                    ; $8D5C
+    lda     #$A5                    ; $8D5C  the RNG's first byte: $A5
     sta     rng                     ; $8D5E
-    inc     nmiFlag                 ; $8D61
-    lda     areaMusic               ; $8D64
+    inc     nmiFlag                 ; $8D61  (nmiFlag, which has no effect)
+    lda     areaMusic               ; $8D64  the area's music
     ; Ten nops: probably code removed late in development.
     nop                             ; $8D67
     nop                             ; $8D68
@@ -2400,10 +2407,10 @@ SideView_Start:
     nop                             ; $8D6E
     nop                             ; $8D6F
     nop                             ; $8D70
-    sta     musicRequest            ; $8D71
-    lda     #$00                    ; $8D73
+    sta     musicRequest            ; $8D71  start it
+    lda     #$00                    ; $8D73  (once)
     sta     areaMusic               ; $8D75
-    jmp     Game_UnblankAndNextMode ; $8D78
+    jmp     Game_UnblankAndNextMode ; $8D78  screen on, next mode
 
 ; Magic cost of each spell (SPELL_*) at each magic level 1-8, 8 bytes per
 ; spell.
@@ -2637,70 +2644,84 @@ BigDoorRowPtrs:
     .byte   $9C                                                             ; $8ED2
     .byte   $8E, $A6, $8E, $B0, $8E                                         ; $8ED3
 
+; ---------------------------------------------------------------------------
+; BigDoor_Update
+;
+; The big door on New Kasuto's east street, run each frame by the SPELL
+; spell there (Spell_SpellEffect, with gameFrozen set): the first frame
+; sets its attributes (BigDoorString) and plays shared effect $10; then
+; every 16 frames bigDoorCounter counts up and the door's three pattern
+; rows (BigDoorRowPtrs) are drawn one row higher; at 15 the open doorway
+; goes into the tile map (BigDoor_DrawOpen), and at 16 the game is
+; unfrozen.  (Checked with a scripted cast in area $14 of the East Hyrule
+; towns: 272 frames, then a dark doorway in the stone building.)
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 BigDoor_Update:
-    lda     bigDoorCounter          ; $8ED8
+    lda     bigDoorCounter          ; $8ED8  16 steps done?
     cmp     #$10                    ; $8EDB
-    bne     @loc_8EE4               ; $8EDD
-    lda     #$00                    ; $8EDF
+    bne     @notDone                ; $8EDD
+    lda     #$00                    ; $8EDF  yes: unfreeze
     sta     gameFrozen              ; $8EE1
     rts                             ; $8EE3
 
-@loc_8EE4:
-    cmp     #$0F                    ; $8EE4
-    bne     @loc_8EEB               ; $8EE6
-    jsr     BigDoor_DrawOpen        ; $8EE8
+@notDone:
+    cmp     #$0F                    ; $8EE4  step 15:
+    bne     @checkFirst             ; $8EE6
+    jsr     BigDoor_DrawOpen        ; $8EE8  the open door in the tile map
 
-@loc_8EEB:
-    lda     bigDoorState            ; $8EEB
-    bne     @loc_8EF7               ; $8EEE
-    lda     #$10                    ; $8EF0
+@checkFirst:
+    lda     bigDoorState            ; $8EEB  the first frame:
+    bne     @step                   ; $8EEE
+    lda     #$10                    ; $8EF0  shared effect $10
     sta     sfxRequest              ; $8EF2
-    sta     bigDoorState            ; $8EF4
+    sta     bigDoorState            ; $8EF4  (once)
 
-@loc_8EF7:
-    lda     #$54                    ; $8EF7
+@step:
+    lda     #$54                    ; $8EF7  tile $54 at map row 11, column 13
     sta     sramAreaTiles+189       ; $8EF9
-    lda     frameCounter            ; $8EFC
+    lda     frameCounter            ; $8EFC  every 16 frames:
     and     #$0F                    ; $8EFE
     bne     @done                   ; $8F00
-    lda     #$23                    ; $8F02
+    lda     #$23                    ; $8F02  from PPU $2336,
     sta     temp0                   ; $8F04
     lda     #$36                    ; $8F06
     sta     temp1                   ; $8F08
     ldx     #$00                    ; $8F0A
-    lda     bigDoorCounter          ; $8F0C
+    lda     bigDoorCounter          ; $8F0C  the door's three rows, one row higher each step:
 
 @loop:
     pha                             ; $8F0F
-    cmp     #$03                    ; $8F10
-    bpl     @loc_8F26               ; $8F12
-    asl     a                       ; $8F14
+    cmp     #$03                    ; $8F10  rows 0-2 of the pattern only
+    bpl     @rowUp                  ; $8F12
+    asl     a                       ; $8F14  its row
     tay                             ; $8F15
     lda     BigDoorRowPtrs,y        ; $8F16
     sta     temp2                   ; $8F19
     lda     BigDoorRowPtrs+1,y      ; $8F1B
     sta     temp3                   ; $8F1E
-    jsr     Ppu_QueueString10       ; $8F20
+    jsr     Ppu_QueueString10       ; $8F20  queue it
     inx                             ; $8F23
     inx                             ; $8F24
     inx                             ; $8F25
 
-@loc_8F26:
-    lda     temp1                   ; $8F26
+@rowUp:
+    lda     temp1                   ; $8F26  one row up
     sec                             ; $8F28
     sbc     #$20                    ; $8F29
     sta     temp1                   ; $8F2B
-    bcs     @loc_8F31               ; $8F2D
+    bcs     @nextRow                ; $8F2D
     dec     temp0                   ; $8F2F
 
-@loc_8F31:
-    pla                             ; $8F31
+@nextRow:
+    pla                             ; $8F31  the next pattern row
     sec                             ; $8F32
     sbc     #$01                    ; $8F33
     bpl     @loop                   ; $8F35
-    lda     bigDoorStep             ; $8F37
-    bne     @loc_8F4F               ; $8F3A
-    ldx     #$00                    ; $8F3C
+    lda     bigDoorStep             ; $8F37  the first time:
+    bne     @end                    ; $8F3A
+    ldx     #$00                    ; $8F3C  the door's attributes (BigDoorString)
 
 @loop2:
     lda     BigDoorString,x         ; $8F3E
@@ -2709,12 +2730,12 @@ BigDoor_Update:
     cpx     #$18                    ; $8F45
     bne     @loop2                  ; $8F47
     inc     bigDoorStep             ; $8F49
-    dec     bigDoorCounter          ; $8F4C
+    dec     bigDoorCounter          ; $8F4C  (counted back up below)
 
-@loc_8F4F:
-    lda     #$FF                    ; $8F4F
+@end:
+    lda     #$FF                    ; $8F4F  end
     sta     ppuBuffer1,x            ; $8F51
-    inc     bigDoorCounter          ; $8F54
+    inc     bigDoorCounter          ; $8F54  next step
 
 @done:
     rts                             ; $8F57
@@ -2728,13 +2749,13 @@ BigDoor_Update:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Ppu_QueueString10:
-    lda     #$01                    ; $8F58
+    lda     #$01                    ; $8F58  send ppuBuffer1
     sta     ppuStringSelect         ; $8F5A
-    lda     temp0                   ; $8F5D
+    lda     temp0                   ; $8F5D  address
     sta     ppuBuffer1,x            ; $8F5F
     lda     temp1                   ; $8F62
     sta     ppuBuffer1+1,x          ; $8F64
-    lda     #$0A                    ; $8F67
+    lda     #$0A                    ; $8F67  10 bytes
     sta     ppuBuffer1+2,x          ; $8F69
     ldy     #$00                    ; $8F6C
 
@@ -2763,29 +2784,29 @@ BigDoorOpenTiles:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 BigDoor_DrawOpen:
-    lda     #$00                    ; $8F84
+    lda     #$00                    ; $8F84  the tile map's page 0 ($6000)
     sta     temp14                  ; $8F86
     lda     #$60                    ; $8F88
     sta     temp15                  ; $8F8A
-    lda     #$3B                    ; $8F8C
+    lda     #$3B                    ; $8F8C  from column $3B (row 3)
     sta     temp2                   ; $8F8E
-    ldx     #$04                    ; $8F90
+    ldx     #$04                    ; $8F90  5 columns
 
-@loc_8F92:
-    ldy     temp2                   ; $8F92
+@column:
+    ldy     temp2                   ; $8F92  the column's top tile,
     lda     BigDoorOpenTopTiles,x   ; $8F94
 
-@loc_8F97:
-    jsr     AreaMap_PutTileDown     ; $8F97
-    cmp     #$B0                    ; $8F9A
-    bcs     @loc_8FA4               ; $8F9C
-    lda     BigDoorOpenTiles,x      ; $8F9E
-    jmp     @loc_8F97               ; $8FA1
+@tileDown:
+    jsr     AreaMap_PutTileDown     ; $8F97  then down
+    cmp     #$B0                    ; $8F9A  to row 11
+    bcs     @nextColumn             ; $8F9C
+    lda     BigDoorOpenTiles,x      ; $8F9E  the doorway
+    jmp     @tileDown               ; $8FA1
 
-@loc_8FA4:
-    inc     temp2                   ; $8FA4
+@nextColumn:
+    inc     temp2                   ; $8FA4  next column
     dex                             ; $8FA6
-    bpl     @loc_8F92               ; $8FA7
+    bpl     @column                 ; $8FA7
     rts                             ; $8FA9
 
 FallPaletteString:
@@ -2799,73 +2820,78 @@ FallPaletteColors:
 ; ---------------------------------------------------------------------------
 ; Mode_FallAnimate
 ;
-; gameMode $0F: show Link falling down the blank screen.
+; gameMode $0F: show Link falling down the blank screen, 2 pixels per
+; frame in the hurt pose, with a black silhouette of himself (object 1's
+; draw in palette 1) 8 pixels right and about 9 higher, while the
+; background's three colors rotate every 2 frames.  Below Y $E8, load the
+; area (gameMode 8) in the overworld's areas, or leave it (gameMode $10)
+; elsewhere.  (Seen at frame 22785 of the no-glitch movie.)
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_FallAnimate:
-    inc     objY                    ; $8FB7
+    inc     objY                    ; $8FB7  2 pixels per frame
     inc     objY                    ; $8FB9
-    lda     objY                    ; $8FBB
+    lda     objY                    ; $8FBB  his shadow, 8 or 9 pixels higher (9 seen)
     sbc     #$08                    ; $8FBD
     sta     objY+1                  ; $8FBF
-    lda     #$78                    ; $8FC1
+    lda     #$78                    ; $8FC1  at X $78
     sta     drawScreenX             ; $8FC3
-    lda     #$80                    ; $8FC5
+    lda     #$80                    ; $8FC5  the shadow at X $80
     sta     drawScreenX+1           ; $8FC7
-    lda     #$0A                    ; $8FC9
+    lda     #$0A                    ; $8FC9  both hurt (pose $0A)
     sta     objState                ; $8FCB
     sta     objState+1              ; $8FCD
-    lda     linkWalkDir             ; $8FCF
+    lda     linkWalkDir             ; $8FCF  facing the same way
     sta     darkLinkWalkDir         ; $8FD1
-    lda     #$30                    ; $8FD3
+    lda     #$30                    ; $8FD3  the second at oamBuffer $30
     sta     objOamOffset+1          ; $8FD5
-    ldx     #$00                    ; $8FD7
+    ldx     #$00                    ; $8FD7  on screen
     stx     drawOffscreen           ; $8FD9
     stx     drawOffscreen+1         ; $8FDB
-    inx                             ; $8FDD
+    inx                             ; $8FDD  drawn as object 1 (swordOwner 1) in palette 1: black
     stx     swordOwner              ; $8FDE
     stx     extraSpriteAttrs        ; $8FE0
-    jsr     Link_DrawBody           ; $8FE3
-    lda     #$08                    ; $8FE6
+    jsr     Link_DrawBody           ; $8FE3  draw it
+    lda     #$08                    ; $8FE6  Link at oamBuffer $08
     sta     objOamOffset            ; $8FE8
     ldx     #$00                    ; $8FEA
     stx     swordOwner              ; $8FEC
     jsr     Link_DrawBody           ; $8FEE
-    lda     a:frameCounter          ; $8FF1
+    lda     a:frameCounter          ; $8FF1  every other frame:
     and     #$01                    ; $8FF4
     bne     @done                   ; $8FF6
-    ldx     #$07                    ; $8FF8
+    ldx     #$07                    ; $8FF8  the background palette ($3F00)
 
 @loop:
     lda     FallPaletteString,x     ; $8FFA
     sta     ppuBuffer0,x            ; $8FFD
     dex                             ; $9000
     bpl     @loop                   ; $9001
-    inc     fallStep                ; $9003
+    inc     fallStep                ; $9003  rotating
     ldy     fallStep                ; $9006
     cpy     #$03                    ; $9009
-    bcc     @loc_9012               ; $900B
+    bcc     @setColors              ; $900B
     ldy     #$00                    ; $900D
     sty     fallStep                ; $900F
 
-@loc_9012:
-    lda     FallPaletteColors,y     ; $9012
+@setColors:
+    lda     FallPaletteColors,y     ; $9012  its three colors
     sta     ppuBuffer0+4            ; $9015
     lda     FallPaletteColors+1,y   ; $9018
     sta     ppuBuffer0+5            ; $901B
     lda     FallPaletteColors+2,y   ; $901E
     sta     ppuBuffer0+6            ; $9021
-    lda     objY                    ; $9024
+    lda     objY                    ; $9024  below Y $E8?
     cmp     #$E8                    ; $9026
     bcc     @done                   ; $9028
-    inc     renderingOff            ; $902A
-    lda     #$08                    ; $902D
+    inc     renderingOff            ; $902A  yes: screen off,
+    lda     #$08                    ; $902D  the overworld's areas: gameMode 8 (load the area)
     ldy     currentWorld            ; $902F
-    beq     @loc_9036               ; $9032
-    lda     #$10                    ; $9034
+    beq     @setMode                ; $9032
+    lda     #$10                    ; $9034  elsewhere: $10 (leave the area)
 
-@loc_9036:
+@setMode:
     sta     gameMode                ; $9036
 
 @done:
@@ -2954,9 +2980,9 @@ Link_EnterArea:
     lda     objXHi                  ; $909F  yes: limit the scroll to his pair of pages
     and     #$02                    ; $90A1  (pages 0-1 or 2-3)
     tay                             ; $90A3
-    sty     sram_69C2               ; $90A4  min page
+    sty     sramScrollMinPage+1     ; $90A4  min page
     iny                             ; $90A7
-    sty     sram_69C5               ; $90A8  max page
+    sty     sramScrollMaxPage+1     ; $90A8  max page
 
 @clear:
     lda     #$00                    ; $90AB  a = 0:
@@ -7122,7 +7148,7 @@ BreakingBlockTiles:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 BreakingBlocks_Update:
-    ldx     #$04                    ; $A6D2
+    ldx     #$04                    ; $A6D2  5 slots
 
 @loop:
     stx     currentObject           ; $A6D4
@@ -7140,75 +7166,90 @@ BreakingBlocks_Update:
 BreakingBlocks_UpdateDone:
     rts                             ; $A6DC
 
+; ---------------------------------------------------------------------------
+; BreakingBlock_Update
+;
+; Animate breaking block slot x (breakingBlockTimer):
+; - broken by the sword (timer from 1): three frames of debris
+;   (BreakingBlockTiles $0C, $10, $14) at timer 1, 9 and $11; at $12 the
+;   slot is freed (the map tile is already empty);
+; - a crumbling floor (timer from $81): three frames (tiles 0, 4, 8) at
+;   $87, $97 and $A7; at $A0 the map tile becomes empty ($42), so Link
+;   falls through, and at $B0 the slot is freed.
+; The four tiles go to ppuBuffer1 as two vertical strings at the block's
+; nametable address.
+;
+; Status:  confirmed
+; ---------------------------------------------------------------------------
 BreakingBlock_Update:
-    lda     breakingBlockTimer,x    ; $A6DD
+    lda     breakingBlockTimer,x    ; $A6DD  breaking?
     beq     BreakingBlocks_UpdateDone ; $A6E0
-    inc     breakingBlockTimer,x    ; $A6E2
-    tay                             ; $A6E5
-    bmi     @loc_A711               ; $A6E6
-    cmp     #$12                    ; $A6E8
-    bcc     @loc_A703               ; $A6EA
+    inc     breakingBlockTimer,x    ; $A6E2  count
+    tay                             ; $A6E5  a crumbling floor ($81 up)?
+    bmi     @crumbling              ; $A6E6
+    cmp     #$12                    ; $A6E8  broken by the sword: $12 frames
+    bcc     @debris                 ; $A6EA
 
-@loc_A6EC:
-    lda     #$00                    ; $A6EC
+@free:
+    lda     #$00                    ; $A6EC  done: free the slot
     sta     breakingBlockTimer,x    ; $A6EE
 
-@loc_A6F1:
-    lda     breakingBlockMapPtrLo,x ; $A6F1
+@empty:
+    lda     breakingBlockMapPtrLo,x ; $A6F1  the block's place in the tile map
     sta     temp0                   ; $A6F4
     lda     breakingBlockMapPtrHi,x ; $A6F6
     sta     temp1                   ; $A6F9
     ldy     breakingBlockMapOffset,x ; $A6FB
-    lda     #$42                    ; $A6FE
+    lda     #$42                    ; $A6FE  empty (tile $42)
     sta     (temp0),y               ; $A700
     rts                             ; $A702
 
-@loc_A703:
-    and     #$07                    ; $A703
+@debris:
+    and     #$07                    ; $A703  every 8 frames (1, 9, $11):
     cmp     #$01                    ; $A705
     bne     BreakingBlocks_UpdateDone ; $A707
-    tya                             ; $A709
+    tya                             ; $A709  the debris frame:
     and     #$18                    ; $A70A
     lsr     a                       ; $A70C
-    adc     #$0C                    ; $A70D
-    bne     @loc_A726               ; $A70F
+    adc     #$0C                    ; $A70D  tiles $0C + 0, 4, 8
+    bne     @queueTiles             ; $A70F  (always)
 
-@loc_A711:
-    and     #$7F                    ; $A711
-    cmp     #$20                    ; $A713
-    beq     @loc_A6F1               ; $A715
-    cmp     #$30                    ; $A717
-    bcs     @loc_A6EC               ; $A719
-    and     #$0F                    ; $A71B
+@crumbling:
+    and     #$7F                    ; $A711  crumbling:
+    cmp     #$20                    ; $A713  at $20 it gives way:
+    beq     @empty                  ; $A715  empty in the map
+    cmp     #$30                    ; $A717  at $30
+    bcs     @free                   ; $A719  done
+    and     #$0F                    ; $A71B  every 16 frames (7, $17, $27):
     cmp     #$07                    ; $A71D
     bne     BreakingBlocks_UpdateDone ; $A71F
-    tya                             ; $A721
+    tya                             ; $A721  tiles 0, 4, 8
     lsr     a                       ; $A722
     lsr     a                       ; $A723
     and     #$0C                    ; $A724
 
-@loc_A726:
+@queueTiles:
     tay                             ; $A726
-    ldx     ppuBuffer1Len           ; $A727
-    lda     BreakingBlockTiles,y    ; $A72A
+    ldx     ppuBuffer1Len           ; $A727  four tiles in two vertical strings:
+    lda     BreakingBlockTiles,y    ; $A72A  top left
     sta     ppuBuffer1+3,x          ; $A72D
-    lda     BreakingBlockTiles+1,y  ; $A730
+    lda     BreakingBlockTiles+1,y  ; $A730  bottom left
     sta     ppuBuffer1+4,x          ; $A733
-    lda     BreakingBlockTiles+2,y  ; $A736
+    lda     BreakingBlockTiles+2,y  ; $A736  top right
     sta     ppuBuffer1+8,x          ; $A739
-    lda     BreakingBlockTiles+3,y  ; $A73C
+    lda     BreakingBlockTiles+3,y  ; $A73C  bottom right
     sta     ppuBuffer1+9,x          ; $A73F
-    ldx     currentObject           ; $A742
-    lda     breakingBlockXHi,x      ; $A744
+    ldx     currentObject           ; $A742  its PPU address:
+    lda     breakingBlockXHi,x      ; $A744  nametable by page
     and     #$01                    ; $A747
     asl     a                       ; $A749
     asl     a                       ; $A74A
     pha                             ; $A74B
-    lda     breakingBlockY,x        ; $A74C
+    lda     breakingBlockY,x        ; $A74C  Y / 8 x 32
     sta     temp2                   ; $A74F
-    lda     breakingBlockX,x        ; $A751
+    lda     breakingBlockX,x        ; $A751  + X / 8
     sta     temp3                   ; $A754
-    lda     #$08                    ; $A756
+    lda     #$08                    ; $A756  ($2000)
     sta     temp0                   ; $A758
     lda     temp2                   ; $A75A
     asl     a                       ; $A75C
@@ -7224,24 +7265,24 @@ BreakingBlock_Update:
     ora     temp1                   ; $A76B
     sta     temp1                   ; $A76D
     ldx     ppuBuffer1Len           ; $A76F
-    pla                             ; $A772
+    pla                             ; $A772  the nametable
     ora     temp0                   ; $A773
     sta     ppuBuffer1,x            ; $A775
-    sta     ppuBuffer1+5,x          ; $A778
-    txa                             ; $A77B
+    sta     ppuBuffer1+5,x          ; $A778  both strings
+    txa                             ; $A77B  10 bytes
     clc                             ; $A77C
     adc     #$0A                    ; $A77D
     sta     ppuBuffer1Len           ; $A77F
-    lda     temp1                   ; $A782
+    lda     temp1                   ; $A782  the left column,
     sta     ppuBuffer1+1,x          ; $A784
-    adc     #$01                    ; $A787
+    adc     #$01                    ; $A787  the right one
     sta     ppuBuffer1+6,x          ; $A789
-    lda     #$82                    ; $A78C
+    lda     #$82                    ; $A78C  vertical, 2 tiles
     sta     ppuBuffer1+2,x          ; $A78E
     sta     ppuBuffer1+7,x          ; $A791
-    lda     #$FF                    ; $A794
+    lda     #$FF                    ; $A794  end
     sta     ppuBuffer1+10,x         ; $A796
-    lda     #$01                    ; $A799
+    lda     #$01                    ; $A799  send ppuBuffer1
     sta     ppuStringSelect         ; $A79B
     ldx     currentObject           ; $A79E
     rts                             ; $A7A0
@@ -7261,7 +7302,7 @@ BridgeTileString:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Saria_BuildBridge:
-    ldy     #$F0                    ; $A7AB
+    ldy     #$F0                    ; $A7AB  a delay, past the vertical blank
 
 @loop:
     nop                             ; $A7AD
@@ -7269,7 +7310,7 @@ Saria_BuildBridge:
     bne     @loop                   ; $A7AF
 
 @loop2:
-    bit     PPUSTATUS               ; $A7B1
+    bit     PPUSTATUS               ; $A7B1  split the screen under the status bar
     bvc     @loop2                  ; $A7B4
     lda     ppuCtrlShadow           ; $A7B6
     ora     playfieldNametable      ; $A7B8
@@ -7283,52 +7324,52 @@ Saria_BuildBridge:
     sta     PPUCTRL                 ; $A7C4
     stx     PPUSCROLL               ; $A7C7
     sty     PPUSCROLL               ; $A7CA
-    inc     a:frameCounter          ; $A7CD
+    inc     a:frameCounter          ; $A7CD  time goes on while paused
     lda     a:frameCounter          ; $A7D0
-    and     #$07                    ; $A7D3
+    and     #$07                    ; $A7D3  every 8 frames:
     bne     @done                   ; $A7D5
-    ldy     #$09                    ; $A7D7
+    ldy     #$09                    ; $A7D7  a bridge tile pair (PPU $272F) and its attributes
 
 @loop4:
     lda     BridgeTileString,y      ; $A7D9
     sta     ppuBuffer0,y            ; $A7DC
     dey                             ; $A7DF
     bpl     @loop4                  ; $A7E0
-    lda     ppuBuffer0+1            ; $A7E2
+    lda     ppuBuffer0+1            ; $A7E2  one tile further left per step
     sec                             ; $A7E5
     sbc     bridgeStep              ; $A7E6
     sta     ppuBuffer0+1            ; $A7E9
-    lda     #$02                    ; $A7EC
+    lda     #$02                    ; $A7EC  the bridge sound
     sta     sfxRequest+1            ; $A7EE
     inc     bridgeStep              ; $A7F0
     lda     bridgeStep              ; $A7F3
-    and     #$0F                    ; $A7F6
+    and     #$0F                    ; $A7F6  16 tiles?
     bne     @done                   ; $A7F8
-    sta     bridgeStep              ; $A7FA
-    lda     #$10                    ; $A7FD
+    sta     bridgeStep              ; $A7FA  yes: from step 0
+    lda     #$10                    ; $A7FD  the bridge into the tile map ($6310):
     sta     temp0                   ; $A7FF
     lda     #$63                    ; $A801
     sta     temp1                   ; $A803
-    ldx     #$51                    ; $A805
+    ldx     #$51                    ; $A805  tile $51 on the upper row,
 
 @loop5:
-    ldy     #$07                    ; $A807
+    ldy     #$07                    ; $A807  8 metatiles
 
 @loop6:
     txa                             ; $A809
     sta     (temp0),y               ; $A80A
     dey                             ; $A80C
     bpl     @loop6                  ; $A80D
-    ldx     #$56                    ; $A80F
+    ldx     #$56                    ; $A80F  $56 on the lower
     lda     temp0                   ; $A811
     clc                             ; $A813
     adc     #$10                    ; $A814
     sta     temp0                   ; $A816
-    cmp     #$30                    ; $A818
+    cmp     #$30                    ; $A818  two rows
     bne     @loop5                  ; $A81A
-    lda     #$00                    ; $A81C
+    lda     #$00                    ; $A81C  unpause
     sta     pauseState              ; $A81E
-    lda     techniques              ; $A821
+    lda     techniques              ; $A821  the bridge is built
     and     #$FE                    ; $A824
     sta     techniques              ; $A826
 
@@ -7345,7 +7386,7 @@ Saria_BuildBridge:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Mode_FallBlankScreen:
-    lda     gameSubStep             ; $A82A
+    lda     gameSubStep             ; $A82A  this frame's step
     jsr     JumpTable               ; $A82D
 ; (inline jump table)
     .word   Ppu_ClearNametables     ; $A830
@@ -7367,8 +7408,8 @@ FallPalette:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Fall_LoadPalette:
-    jsr     Oam_HideAll             ; $A85A
-    lda     #$06                    ; $A85D
+    jsr     Oam_HideAll             ; $A85A  no sprites
+    lda     #$06                    ; $A85D  PPU string 6: FallPalette
     sta     ppuStringSelect         ; $A85F
     inc     gameSubStep             ; $A862
     rts                             ; $A865
@@ -7385,35 +7426,35 @@ FallNametableTiles:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Fall_FillNametable:
-    lda     #$02                    ; $A869
+    lda     #$02                    ; $A869  the fall's CHR bank
     jsr     Mmc1_SetChrBank_Bank0   ; $A86B
-    lda     ppuCtrlShadow           ; $A86E
+    lda     ppuCtrlShadow           ; $A86E  +1 per write
     and     #$FB                    ; $A870
     sta     PPUCTRL                 ; $A872
-    lda     PPUSTATUS               ; $A875
+    lda     PPUSTATUS               ; $A875  PPU $2000:
     lda     #$20                    ; $A878
     ldy     #$00                    ; $A87A
     sta     PPUADDR                 ; $A87C
     sty     PPUADDR                 ; $A87F
-    lda     #$09                    ; $A882
+    lda     #$09                    ; $A882  10 times
     sta     temp0                   ; $A884
 
 @loop:
-    ldx     #$02                    ; $A886
+    ldx     #$02                    ; $A886  a row each of $FD, $FE, $FF
 
 @loop2:
     ldy     #$1F                    ; $A888
     lda     FallNametableTiles,x    ; $A88A
 
 @loop3:
-    sta     PPUDATA                 ; $A88D
+    sta     PPUDATA                 ; $A88D  (32 tiles)
     dey                             ; $A890
     bpl     @loop3                  ; $A891
     dex                             ; $A893
     bpl     @loop2                  ; $A894
-    dec     temp0                   ; $A896
+    dec     temp0                   ; $A896  (30 rows; the rest are attributes)
     bpl     @loop                   ; $A898
-    inc     gameMode                ; $A89A
+    inc     gameMode                ; $A89A  next mode
     rts                             ; $A89D
 ; (unreferenced: $A89E-$A97F, 226 bytes)
     .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF; $A89E
@@ -7448,34 +7489,39 @@ NewGameSramData:
 ; Game_StartAtNorthCastle
 ;
 ; Put Link at the start of the game, in North Castle (world 0, region 0,
-; area 0), with full meters.  Called when a game begins or continues.
+; area 0, page 0, from the left) with the intro music ($01) and full
+; meters, compute experienceNext, and copy the SRAM tables a game starts
+; with from NewGameSramData ($6958-$69DF: the lives screen's text, the
+; entry scroll slots, the scroll limits and Link's palettes).  Called when
+; a game begins or continues.  tools/play.py --at patches its rts ($AA3F)
+; to start elsewhere.
 ;
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Game_StartAtNorthCastle:
-    sta     gameStep                ; $AA08
-    sta     currentRegion           ; $AA0B
-    sta     currentWorld            ; $AA0E
-    sta     areaId                  ; $AA11
-    sta     areaLocation            ; $AA14
+    sta     gameStep                ; $AA08  a = 0:
+    sta     currentRegion           ; $AA0B  region 0,
+    sta     currentWorld            ; $AA0E  world 0,
+    sta     areaId                  ; $AA11  area 0,
+    sta     areaLocation            ; $AA14  location 0,
     sta     unused073F              ; $AA17
-    sta     areaStartPage           ; $AA1A
-    sta     areaEntrySide           ; $AA1D
+    sta     areaStartPage           ; $AA1A  page 0,
+    sta     areaEntrySide           ; $AA1D  from the left
     ldx     #$01                    ; $AA20
     stx     unused075D              ; $AA22
-    stx     areaMusic               ; $AA25
+    stx     areaMusic               ; $AA25  the intro music
 
 @loop:
-    jsr     Stat_FillMeter          ; $AA28
+    jsr     Stat_FillMeter          ; $AA28  both meters full
     dex                             ; $AA2B
     bpl     @loop                   ; $AA2C
-    stx     unused0708              ; $AA2E
-    jsr     Exp_ComputeNext         ; $AA31
-    ldy     #$88                    ; $AA34
+    stx     unused0708              ; $AA2E  ($FF)
+    jsr     Exp_ComputeNext         ; $AA31  the first level up
+    ldy     #$88                    ; $AA34  the SRAM tables a game starts with ($6958-$69DF):
 
 @loop2:
-    lda     NewGameSramData,y       ; $AA36
-    sta     sram_6957,y             ; $AA39
+    lda     NewGameSramData,y       ; $AA36  the lives screen's text, the entry scroll slots, the scroll
+    sta     sram_6957,y             ; $AA39  limits and Link's palettes
     dey                             ; $AA3C
     bne     @loop2                  ; $AA3D
     rts                             ; $AA3F
