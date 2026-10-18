@@ -119,6 +119,9 @@ unless noted):
 - 8o. Done: sound (bank 6): both engines' players, request handlers and
   effects; no `@loc_` labels left.  QUIRK: Ganon's laugh never plays its
   second sample (DmcLaugh2; seen in a scripted game over).
-- 8p. The enemies' top-up: the enemy routines of banks 1-5 measure
-  15-40%, below the standard set by the later ones; Gooma (18 `@loc_`),
-  Barba, Rebonack, Fokka and Thunderbird have unnamed labels.
+- 8p. Done: the bosses' draw routines that had no comments (Barba,
+  Rebonack, Carock, Gooma's part drawer, the Thunderbird, Fokka, Fokkeru)
+  and the death sparks of banks 4, 4B and 5; Gooma's and the King Bot's
+  labels named.  No `@loc_` labels are left in any bank.  The enemy
+  routines that measure 15-25% are commented a comment per few lines, in
+  the enemy pass's style, and were left as they are.

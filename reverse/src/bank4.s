@@ -1211,12 +1211,12 @@ Projectile_Fireball_Bank4:
 Projectile_Straight_Bank4:
     lda     objY+7,x                ; $974E  near the floor?
     cmp     #$C5                    ; $9750  
-    bcc     @loc_9759               ; $9752
+    bcc     @fly                    ; $9752
     lda     #$F4                    ; $9754  burst
     sta     objState+7,x            ; $9756
     rts                             ; $9758
 
-@loc_9759:
+@fly:
     jmp     Projectile_MoveAndCheck_Bank4 ; $9759  move, draw, test Link
 
 Projectile_RockBounce_Bank4:
@@ -1247,27 +1247,27 @@ Projectile_DeathSpark_Bank4:
     jmp     Projectile_Remove_Bank4 ; $976B
 
 @show:
-    ldy     objOamOffset+7,x        ; $976E
-    lda     objY+7,x                ; $9770
+    ldy     objOamOffset+7,x        ; $976E  its sprite
+    lda     objY+7,x                ; $9770  at its Y,
     sta     temp0                   ; $9772
-    lda     #$02                    ; $9774
+    lda     #$02                    ; $9774  facing left (2),
     sta     temp2                   ; $9776
-    lsr     a                       ; $9778
+    lsr     a                       ; $9778  palette 1,
     sta     temp3                   ; $9779
-    lsr     a                       ; $977B
+    lsr     a                       ; $977B  on screen
     sta     drawOffscreen+1         ; $977C
-    lda     objX+7,x                ; $977E
+    lda     objX+7,x                ; $977E  at its screen X (carry set: no borrow)
     sbc     scrollX                 ; $9780
     sta     temp1                   ; $9783
-    lda     objXVelocity+7,x        ; $9785
-    ldx     #$00                    ; $9787
+    lda     objXVelocity+7,x        ; $9785  the first 8 frames:
+    ldx     #$00                    ; $9787  entry 0, a small spark
     cmp     #$08                    ; $9789
     bcs     @draw                   ; $978B
-    ldx     #$02                    ; $978D
+    ldx     #$02                    ; $978D  then entry 2, a ring
 
 @draw:
-    jsr     Sprite_DrawPairFromTableKeepX ; $978F
-    lda     #$41                    ; $9792
+    jsr     Sprite_DrawPairFromTableKeepX ; $978F  a pair
+    lda     #$41                    ; $9792  the right sprite mirrored
     sta     oamBuffer - 2,y         ; $9794
     rts                             ; $9797
 
@@ -3769,27 +3769,27 @@ Projectile_DeathSpark_Bank4B:
     jmp     Projectile_Remove_Bank4B ; $ADE4
 
 @show:
-    ldy     objOamOffset+7,x        ; $ADE7
-    lda     objY+7,x                ; $ADE9
+    ldy     objOamOffset+7,x        ; $ADE7  its sprite
+    lda     objY+7,x                ; $ADE9  at its Y,
     sta     temp0                   ; $ADEB
-    lda     #$02                    ; $ADED
+    lda     #$02                    ; $ADED  facing left (2),
     sta     temp2                   ; $ADEF
-    lsr     a                       ; $ADF1
+    lsr     a                       ; $ADF1  palette 1,
     sta     temp3                   ; $ADF2
-    lsr     a                       ; $ADF4
+    lsr     a                       ; $ADF4  on screen
     sta     drawOffscreen+1         ; $ADF5
-    lda     objX+7,x                ; $ADF7
+    lda     objX+7,x                ; $ADF7  at its screen X (carry set: no borrow)
     sbc     scrollX                 ; $ADF9
     sta     temp1                   ; $ADFC
-    lda     objXVelocity+7,x        ; $ADFE
-    ldx     #$00                    ; $AE00
+    lda     objXVelocity+7,x        ; $ADFE  the first 8 frames:
+    ldx     #$00                    ; $AE00  entry 0, a small spark
     cmp     #$08                    ; $AE02
     bcs     @draw                   ; $AE04
-    ldx     #$02                    ; $AE06
+    ldx     #$02                    ; $AE06  then entry 2, a ring
 
 @draw:
-    jsr     Sprite_DrawPairFromTableKeepX ; $AE08
-    lda     #$41                    ; $AE0B
+    jsr     Sprite_DrawPairFromTableKeepX ; $AE08  a pair
+    lda     #$41                    ; $AE0B  the right sprite mirrored
     sta     oamBuffer - 2,y         ; $AE0D
 
 @done:
@@ -4863,104 +4863,104 @@ BarbaNeckFrames:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Barba_Draw:
-    lda     temp0                   ; $B290
+    lda     temp0                   ; $B290  his Y (the head's)
     sta     temp13                  ; $B292
-    lda     #$E8                    ; $B294
+    lda     #$E8                    ; $B294  the neck down to the lava (Y $E8):
     sec                             ; $B296
     sbc     temp0                   ; $B297
-    bcc     @loc_B304               ; $B299
-    lsr     a                       ; $B29B
+    bcc     @head                   ; $B299  below it: only the head
+    lsr     a                       ; $B29B  segments: 16 pixels each,
     lsr     a                       ; $B29C
     lsr     a                       ; $B29D
     lsr     a                       ; $B29E
-    and     #$07                    ; $B29F
+    and     #$07                    ; $B29F  up to 8
     sta     drawScratch             ; $B2A1
-    lda     timerFast+TIMER_ENEMY,x ; $B2A3
+    lda     timerFast+TIMER_ENEMY,x ; $B2A3  his timer
     sta     temp6                   ; $B2A6
-    ldx     #$64                    ; $B2A8
-    ldy     barbaStep               ; $B2AA
+    ldx     #$64                    ; $B2A8  the neck's tiles: entry $64,
+    ldy     barbaStep               ; $B2AA  breathing (step 2)
     cpy     #$02                    ; $B2AD
-    bne     @loc_B2C3               ; $B2AF
-    sbc     #$30                    ; $B2B1
+    bne     @neck                   ; $B2AF
+    sbc     #$30                    ; $B2B1  and the timer at $30-$5F?
     cmp     #$30                    ; $B2B3
-    bcs     @loc_B2C3               ; $B2B5
+    bcs     @neck                   ; $B2B5
 ; (code below not executed in the test movies)
-    lda     temp6                   ; $B2B7
+    lda     temp6                   ; $B2B7  the mouth opening: by timer bits 5-4
     and     #$30                    ; $B2B9
     lsr     a                       ; $B2BB
     lsr     a                       ; $B2BC
     lsr     a                       ; $B2BD
     lsr     a                       ; $B2BE
     tay                             ; $B2BF
-    ldx     BarbaNeckFrames,y       ; $B2C0
+    ldx     BarbaNeckFrames,y       ; $B2C0  the neck's frame
 ; (end of code not executed in the test movies)
 
-@loc_B2C3:
-    ldy     #$48                    ; $B2C3
-    lda     #$00                    ; $B2C5
+@neck:
+    ldy     #$48                    ; $B2C3  from oamBuffer $48
+    lda     #$00                    ; $B2C5  the top segment first
     sta     temp14                  ; $B2C7
 
 @loop:
     tya                             ; $B2C9
     pha                             ; $B2CA
-    ldy     temp14                  ; $B2CB
+    ldy     temp14                  ; $B2CB  the segment's Y
     lda     temp13                  ; $B2CD
     clc                             ; $B2CF
     adc     BarbaDrawYOffsets,y     ; $B2D0
     sta     temp0                   ; $B2D3
-    lda     frameCounter            ; $B2D5
+    lda     frameCounter            ; $B2D5  the sway: frameCounter / 8
     lsr     a                       ; $B2D7
     lsr     a                       ; $B2D8
     lsr     a                       ; $B2D9
     and     #$07                    ; $B2DA
     clc                             ; $B2DC
-    adc     temp14                  ; $B2DD
+    adc     temp14                  ; $B2DD  + the segment
     tay                             ; $B2DF
-    lda     BarbaNeckXOffsets,y     ; $B2E0
-    ldy     barbaStep               ; $B2E3
+    lda     BarbaNeckXOffsets,y     ; $B2E0  its X offset,
+    ldy     barbaStep               ; $B2E3  breathing:
     cpy     #$02                    ; $B2E6
-    bne     @loc_B2EB               ; $B2E8
-    asl     a                       ; $B2EA
+    bne     @setX                   ; $B2E8
+    asl     a                       ; $B2EA  doubled
 
-@loc_B2EB:
-    clc                             ; $B2EB
+@setX:
+    clc                             ; $B2EB  the segment's X
     adc     drawScreenX+1           ; $B2EC
     sta     temp1                   ; $B2EE
     pla                             ; $B2F0
     tay                             ; $B2F1
-    cpy     #$48                    ; $B2F2
-    bne     @loc_B2FB               ; $B2F4
-    lda     temp1                   ; $B2F6
+    cpy     #$48                    ; $B2F2  the top segment:
+    bne     @draw                   ; $B2F4
+    lda     temp1                   ; $B2F6  kept for the head
     sta     barbaHeadX              ; $B2F8
 
-@loc_B2FB:
-    jsr     Sprite_DrawEnemyPair    ; $B2FB
-    inc     temp14                  ; $B2FE
+@draw:
+    jsr     Sprite_DrawEnemyPair    ; $B2FB  the segment's pair
+    inc     temp14                  ; $B2FE  the next one down
     dec     drawScratch             ; $B300
     bpl     @loop                   ; $B302
 
-@loc_B304:
-    ldx     currentObject           ; $B304
+@head:
+    ldx     currentObject           ; $B304  the head:
     lda     timerFast+TIMER_ENEMY,x ; $B306
     sta     temp7                   ; $B309
-    lda     temp13                  ; $B30B
+    lda     temp13                  ; $B30B  at his Y,
     sta     temp0                   ; $B30D
-    ldx     temp2                   ; $B30F
+    ldx     temp2                   ; $B30F  beside the top segment on the side he faces
     lda     barbaHeadX              ; $B311
     clc                             ; $B314
     adc     BarbaHeadXOffsets,x     ; $B315
     sta     temp1                   ; $B318
-    ldx     #$9A                    ; $B31A
-    lda     barbaStep               ; $B31C
+    ldx     #$9A                    ; $B31A  entry $9A,
+    lda     barbaStep               ; $B31C  breathing
     cmp     #$02                    ; $B31F
-    bne     @loc_B339               ; $B321
-    lda     temp7                   ; $B323
+    bne     @drawHead               ; $B321
+    lda     temp7                   ; $B323  and the timer at $30-$5F?
     sec                             ; $B325
     sbc     #$30                    ; $B326
     cmp     #$30                    ; $B328
-    bcs     @loc_B339               ; $B32A
+    bcs     @drawHead               ; $B32A
 ; (code below not executed in the test movies)
-    lda     temp7                   ; $B32C
+    lda     temp7                   ; $B32C  the mouth opening: by timer bits 5-4
     and     #$30                    ; $B32E
     lsr     a                       ; $B330
     lsr     a                       ; $B331
@@ -4971,8 +4971,8 @@ Barba_Draw:
     tax                             ; $B338
 ; (end of code not executed in the test movies)
 
-@loc_B339:
-    jmp     Sprite_DrawEnemyPairKeepX ; $B339
+@drawHead:
+    jmp     Sprite_DrawEnemyPairKeepX ; $B339  the head's pair
 
 ; ---------------------------------------------------------------------------
 ; Rathead_Init
@@ -5096,89 +5096,89 @@ RebonackDrawOffsets:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Rebonack_Draw:
-    lda     enemyAiState,x          ; $B3A8
+    lda     enemyAiState,x          ; $B3A8  the turn's count / 4
     lsr     a                       ; $B3AA
     lsr     a                       ; $B3AB
     sta     drawScratch             ; $B3AC
-    ldy     temp2                   ; $B3AE
-    lda     drawOffscreen+1         ; $B3B0
+    ldy     temp2                   ; $B3AE  facing
+    lda     drawOffscreen+1         ; $B3B0  keep the off-screen bits
     pha                             ; $B3B2
     pha                             ; $B3B3
-    cpy     #$01                    ; $B3B4
-    bne     @loc_B3C6               ; $B3B6
+    cpy     #$01                    ; $B3B4  facing right:
+    bne     @slide                  ; $B3B6
 ; (code below not executed in the test movies)
-    lda     drawScreenX+1           ; $B3B8
+    lda     drawScreenX+1           ; $B3B8  the horse's head on the right (+16)
     adc     #$0F                    ; $B3BA
     sta     temp1                   ; $B3BC
-    lda     drawOffscreen+1         ; $B3BE
+    lda     drawOffscreen+1         ; $B3BE  (that column's off-screen bits)
     asl     a                       ; $B3C0
     asl     a                       ; $B3C1
     and     #$0F                    ; $B3C2
     sta     drawOffscreen+1         ; $B3C4
 ; (end of code not executed in the test movies)
 
-@loc_B3C6:
-    dey                             ; $B3C6
+@slide:
+    dey                             ; $B3C6  the slide offset: (facing - 1) x 8
     tya                             ; $B3C7
     asl     a                       ; $B3C8
     asl     a                       ; $B3C9
     asl     a                       ; $B3CA
-    adc     drawScratch             ; $B3CB
+    adc     drawScratch             ; $B3CB  + count / 4
     tay                             ; $B3CD
     lda     temp1                   ; $B3CE
     adc     RebonackDrawOffsets,y   ; $B3D0
     sta     temp1                   ; $B3D3
-    ldy     #$50                    ; $B3D5
-    ldx     #$58                    ; $B3D7
+    ldy     #$50                    ; $B3D5  at oamBuffer $50,
+    ldx     #$58                    ; $B3D7  entry $58: the horse's head
     jsr     Sprite_DrawEnemyPair3_Bank4 ; $B3D9
-    lda     objY+1,x                ; $B3DC
+    lda     objY+1,x                ; $B3DC  the rider's column:
     sta     temp0                   ; $B3DE
     ldy     temp2                   ; $B3E0
-    pla                             ; $B3E2
+    pla                             ; $B3E2  the off-screen bits again
     sta     drawOffscreen+1         ; $B3E3
     lda     drawScreenX+1           ; $B3E5
     sta     temp1                   ; $B3E7
-    cpy     #$02                    ; $B3E9
-    bne     @loc_B3F9               ; $B3EB
-    adc     #$0F                    ; $B3ED
+    cpy     #$02                    ; $B3E9  facing left:
+    bne     @rider                  ; $B3EB
+    adc     #$0F                    ; $B3ED  the rider on the right (+16)
     sta     temp1                   ; $B3EF
-    lda     drawOffscreen+1         ; $B3F1
+    lda     drawOffscreen+1         ; $B3F1  (that column's off-screen bits)
     asl     a                       ; $B3F3
     asl     a                       ; $B3F4
     and     #$0F                    ; $B3F5
     sta     drawOffscreen+1         ; $B3F7
 
-@loc_B3F9:
-    lda     objState+1,x            ; $B3F9
-    ldx     #$5C                    ; $B3FB
+@rider:
+    lda     objState+1,x            ; $B3F9  a rider (objState bit 7 clear)?
+    ldx     #$5C                    ; $B3FB  entry $5C,
     asl     a                       ; $B3FD
-    beq     @loc_B402               ; $B3FE
-    ldx     #$60                    ; $B400
+    beq     @riderSlide             ; $B3FE
+    ldx     #$60                    ; $B400  riderless: $60
 
-@loc_B402:
-    dey                             ; $B402
+@riderSlide:
+    dey                             ; $B402  the slide offset, the other way:
     tya                             ; $B403
     eor     #$01                    ; $B404
     asl     a                       ; $B406
     asl     a                       ; $B407
     asl     a                       ; $B408
-    adc     drawScratch             ; $B409
+    adc     drawScratch             ; $B409  + count / 4
     tay                             ; $B40B
     lda     temp1                   ; $B40C
     adc     RebonackDrawOffsets,y   ; $B40E
     sta     temp1                   ; $B411
-    ldy     #$60                    ; $B413
+    ldy     #$60                    ; $B413  at oamBuffer $60
     jsr     Sprite_DrawEnemyPair3_Bank4 ; $B415
-    lda     frameCounter            ; $B418
+    lda     frameCounter            ; $B418  every other 16 frames:
     and     #$10                    ; $B41A
-    beq     @loc_B424               ; $B41C
-    inc     oamBuffer+96            ; $B41E
+    beq     @done                   ; $B41C
+    inc     oamBuffer+96            ; $B41E  the rider's top row 1 lower
     inc     oamBuffer+100           ; $B421
 
-@loc_B424:
+@done:
     pla                             ; $B424
     sta     drawOffscreen+1         ; $B425
-    lda     #$48                    ; $B427
+    lda     #$48                    ; $B427  the lance at oamBuffer $58
     sta     objOamOffset+1,x        ; $B429
     rts                             ; $B42B
 
@@ -5204,49 +5204,49 @@ Wizrobe_Draw:
 ; Carock_Draw
 ;
 ; Draw Carock, 32 pixels wide: a column of three pairs from sramEnemyTiles
-; entry $A0 (blinking in, count $F0 and up) or $AC, and beside it a pair
-; from $A6 or $B2, on the side away from his facing.
+; entry $A0 (blinking in, count $F0 and up) or $AC, and beside it a second
+; column of three from $A6 or $B2, the first column on the side he faces.
 ;
 ; In:      x = enemy index
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Carock_Draw:
-    lda     temp1                   ; $B439
+    lda     temp1                   ; $B439  the second column 16 to the right,
     clc                             ; $B43B
     adc     #$10                    ; $B43C
     sta     drawScratch             ; $B43E
-    lda     temp2                   ; $B440
+    lda     temp2                   ; $B440  facing right:
     cmp     #$01                    ; $B442
-    bne     @loc_B44F               ; $B444
-    lda     drawScreenX+1           ; $B446
+    bne     @first                  ; $B444
+    lda     drawScreenX+1           ; $B446  the second at his X,
     sta     drawScratch             ; $B448
-    clc                             ; $B44A
+    clc                             ; $B44A  the first 16 to the right
     adc     #$10                    ; $B44B
     sta     temp1                   ; $B44D
 
-@loc_B44F:
-    lda     enemyAiState,x          ; $B44F
-    ldx     #$A0                    ; $B451
+@first:
+    lda     enemyAiState,x          ; $B44F  the first column:
+    ldx     #$A0                    ; $B451  entry $A0 blinking in,
     cmp     #$F0                    ; $B453
-    bcs     @loc_B459               ; $B455
-    ldx     #$AC                    ; $B457
+    bcs     @drawFirst              ; $B455
+    ldx     #$AC                    ; $B457  else $AC
 
-@loc_B459:
-    jsr     Sprite_DrawEnemyPair    ; $B459
+@drawFirst:
+    jsr     Sprite_DrawEnemyPair    ; $B459  three pairs down
     jsr     Sprite_DrawEnemyPair    ; $B45C
     jsr     Sprite_DrawEnemyPairKeepX ; $B45F
-    lda     drawScratch             ; $B462
+    lda     drawScratch             ; $B462  the second column:
     sta     temp1                   ; $B464
-    lda     objY+1,x                ; $B466
+    lda     objY+1,x                ; $B466  from his Y,
     sta     temp0                   ; $B468
-    lda     enemyAiState,x          ; $B46A
+    lda     enemyAiState,x          ; $B46A  entry $A6 blinking in,
     ldx     #$A6                    ; $B46C
     cmp     #$F0                    ; $B46E
-    bcs     @loc_B474               ; $B470
-    ldx     #$B2                    ; $B472
+    bcs     @drawSecond             ; $B470
+    ldx     #$B2                    ; $B472  else $B2
 
-@loc_B474:
-    jsr     Sprite_DrawEnemyPair    ; $B474
+@drawSecond:
+    jsr     Sprite_DrawEnemyPair    ; $B474  three pairs down
 
 ; ---------------------------------------------------------------------------
 ; Sprite_DrawEnemyPair3_Bank4
@@ -5536,44 +5536,44 @@ Gooma_Draw:
     sta     temp2                   ; $B5B9
     lda     #$02                    ; $B5BB  palette 2, or flashing
     ldy     enemyStunTimer,x        ; $B5BD  (stun & 3) while stunned
-    beq     @loc_B5C5               ; $B5C0
+    beq     @setPalette             ; $B5C0
     tya                             ; $B5C2
     and     #$03                    ; $B5C3
 
-@loc_B5C5:
+@setPalette:
     sta     temp6                   ; $B5C5
     ldy     #$00                    ; $B5C7  frame 0: standing
     lda     objXVelocity+1,x        ; $B5C9  moving or swinging,
     ora     objState+1,x            ; $B5CB
-    beq     @loc_B600               ; $B5CD
+    beq     @drawBody               ; $B5CD
     lda     scrollFrozen            ; $B5CF  in the fight:
-    beq     @loc_B600               ; $B5D2
+    beq     @drawBody               ; $B5D2
     lda     enemyAiState,x          ; $B5D4  walking: frame 9, or 2
     ldy     #$09                    ; $B5D6
     and     #$7F                    ; $B5D8
-    beq     @loc_B5E7               ; $B5DA
+    beq     @checkSwing             ; $B5DA
     and     #$07                    ; $B5DC
     sec                             ; $B5DE
     sbc     #$03                    ; $B5DF
     cmp     #$03                    ; $B5E1
-    bcs     @loc_B5E7               ; $B5E3
+    bcs     @checkSwing             ; $B5E3
     ldy     #$12                    ; $B5E5  on counts 3-5 of each 8
 
-@loc_B5E7:
+@checkSwing:
     lda     sramEnemyHitbox+33      ; $B5E7  alive and swinging:
-    bmi     @loc_B600               ; $B5EA
+    bmi     @drawBody               ; $B5EA
     lda     objState+1,x            ; $B5EC
-    beq     @loc_B600               ; $B5EE
+    beq     @drawBody               ; $B5EE
     ldy     #$24                    ; $B5F0  pose 2: frame $24, throwing
     cmp     #$02                    ; $B5F2
-    beq     @loc_B600               ; $B5F4
+    beq     @drawBody               ; $B5F4
     ldy     #$1B                    ; $B5F6  pose 1: frame $1B, every
     lda     frameCounter            ; $B5F8
     and     #$08                    ; $B5FA
-    bne     @loc_B600               ; $B5FC
+    bne     @drawBody               ; $B5FC
     ldy     #$00                    ; $B5FE  other 8 frames 0
 
-@loc_B600:
+@drawBody:
     tya                             ; $B600
     tax                             ; $B601
     ldy     #$60                    ; $B602  three rows of three sprites
@@ -5582,26 +5582,26 @@ Gooma_Draw:
     jsr     Gooma_DrawPart          ; $B60A
     ldx     currentObject           ; $B60D
     lda     sramEnemyHitbox+33      ; $B60F  the ball (dying: none)
-    bmi     @loc_B653               ; $B612
+    bmi     @noBall                 ; $B612
     lda     objState+1,x            ; $B614  pose 2: thrown out
     cmp     #$02                    ; $B616
-    beq     @loc_B656               ; $B618
+    beq     @throw                  ; $B618
     cmp     #$01                    ; $B61A  pose 1: whirling
-    bne     @loc_B653               ; $B61C
+    bne     @noBall                 ; $B61C
     lda     timerFast+TIMER_ENEMY,x ; $B61E  at step (timer / 2) & 7,
     lsr     a                       ; $B621
     and     #$07                    ; $B622
     ldy     temp2                   ; $B624
     cpy     #$01                    ; $B626
-    bne     @loc_B62C               ; $B628
+    bne     @whirlStep              ; $B628
 ; (code below not executed in the test movies)
     eor     #$07                    ; $B62A  (the other way facing right)
 ; (end of code not executed in the test movies)
 
-@loc_B62C:
+@whirlStep:
     tay                             ; $B62C
     lda     drawOffscreen+1         ; $B62D
-    bne     @loc_B653               ; $B62F
+    bne     @noBall                 ; $B62F
     lda     objY+1,x                ; $B631  the ball (OAM $40, $44) round
     clc                             ; $B633
     adc     GoomaWhirlYOffsets,y    ; $B634
@@ -5615,20 +5615,20 @@ Gooma_Draw:
     adc     #$08                    ; $B647
     sta     oamBuffer+71            ; $B649
     lda     drawOffscreen+1         ; $B64C
-    bne     @loc_B653               ; $B64E
-    jmp     @loc_B709               ; $B650
+    bne     @noBall                 ; $B64E
+    jmp     @ballTiles              ; $B650
 
-@loc_B653:
-    jmp     @loc_B728               ; $B653
+@noBall:
+    jmp     @done                   ; $B653
 
-@loc_B656:
+@throw:
     sty     temp5                   ; $B656  pose 2: his arm (2 sprites)
     ldy     objFacing+1,x           ; $B658
     lda     a:drawScreenX+1         ; $B65A
     clc                             ; $B65D
     adc     GoomaArmXOffsets,y      ; $B65E  out in front (GoomaArmXOffsets)
     dey                             ; $B661
-    beq     @loc_B66C               ; $B662
+    beq     @checkArmEdge           ; $B662
     pha                             ; $B664
     php                             ; $B665
     pla                             ; $B666
@@ -5637,17 +5637,17 @@ Gooma_Draw:
     plp                             ; $B66A
     pla                             ; $B66B
 
-@loc_B66C:
-    bcc     @loc_B671               ; $B66C
+@checkArmEdge:
+    bcc     @arm                    ; $B66C
 ; (code below not executed in the test movies)
 
-@loc_B66E:
-    jmp     @loc_B728               ; $B66E
+@offScreen:
+    jmp     @done                   ; $B66E
 ; (end of code not executed in the test movies)
 
-@loc_B671:
+@arm:
     ldy     drawOffscreen+1         ; $B671
-    bne     @loc_B66E               ; $B673
+    bne     @offScreen              ; $B673
     ldy     temp5                   ; $B675
     sta     oamBuffer+3,y           ; $B677
     sta     oamBuffer+7,y           ; $B67A
@@ -5669,19 +5669,19 @@ Gooma_Draw:
     tay                             ; $B6A0
     lda     objFacing+1,x           ; $B6A1
     cmp     #$02                    ; $B6A3
-    bne     @loc_B6AC               ; $B6A5
+    bne     @ballX                  ; $B6A5
     tya                             ; $B6A7
     clc                             ; $B6A8
     adc     #$08                    ; $B6A9  (+8: the left-facing half)
     tay                             ; $B6AB
 
-@loc_B6AC:
+@ballX:
     lda     a:drawScreenX+1         ; $B6AC
     clc                             ; $B6AF
     adc     GoomaBallXOffsets,y     ; $B6B0  (GoomaBallXOffsets)
     ldy     objFacing+1,x           ; $B6B3
     dey                             ; $B6B5
-    beq     @loc_B6C0               ; $B6B6
+    beq     @checkBallEdge          ; $B6B6
     pha                             ; $B6B8
     php                             ; $B6B9
     pla                             ; $B6BA
@@ -5690,13 +5690,13 @@ Gooma_Draw:
     plp                             ; $B6BE
     pla                             ; $B6BF
 
-@loc_B6C0:
-    bcc     @loc_B6C5               ; $B6C0
+@checkBallEdge:
+    bcc     @ball                   ; $B6C0
 ; (code below not executed in the test movies)
-    jmp     @loc_B728               ; $B6C2
+    jmp     @done                   ; $B6C2
 ; (end of code not executed in the test movies)
 
-@loc_B6C5:
+@ball:
     sta     oamBuffer+67            ; $B6C5  the ball
     clc                             ; $B6C8
     adc     #$08                    ; $B6C9
@@ -5728,7 +5728,7 @@ Gooma_Draw:
     sta     oamBuffer+144           ; $B703
     sta     oamBuffer+148           ; $B706
 
-@loc_B709:
+@ballTiles:
     lda     oamBuffer+98            ; $B709  the ball's tiles, palette 3
     ora     #$03                    ; $B70C
     sta     oamBuffer+66            ; $B70E
@@ -5738,11 +5738,11 @@ Gooma_Draw:
     lda     #$BC                    ; $B718
     sty     oamBuffer+65            ; $B71A
     sta     oamBuffer+69            ; $B71D
-    bcc     @loc_B728               ; $B720
+    bcc     @done                   ; $B720
     sta     oamBuffer+65            ; $B722
     sty     oamBuffer+69            ; $B725
 
-@loc_B728:
+@done:
     lda     #$30                    ; $B728  fifth sprite: the ball
     sta     objOamOffset+1,x        ; $B72A
     rts                             ; $B72C
@@ -5757,56 +5757,56 @@ Gooma_Draw:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Gooma_DrawPart:
-    lda     GoomaPartTiles,x        ; $B72D
+    lda     GoomaPartTiles,x        ; $B72D  the row's three tiles
     sta     oamBuffer+1,y           ; $B730
     lda     GoomaPartTiles+1,x      ; $B733
     sta     oamBuffer+5,y           ; $B736
     lda     GoomaPartTiles+2,x      ; $B739
     sta     oamBuffer+9,y           ; $B73C
-    lda     #$00                    ; $B73F
+    lda     #$00                    ; $B73F  not mirrored
     sta     temp5                   ; $B741
-    lda     temp2                   ; $B743
+    lda     temp2                   ; $B743  facing right:
     cmp     #$01                    ; $B745
-    bne     @loc_B759               ; $B747
-    lda     GoomaPartTiles,x        ; $B749
+    bne     @setAttrs               ; $B747
+    lda     GoomaPartTiles,x        ; $B749  the outer two swapped
     sta     oamBuffer+9,y           ; $B74C
     lda     GoomaPartTiles+2,x      ; $B74F
     sta     oamBuffer+1,y           ; $B752
-    lda     #$40                    ; $B755
+    lda     #$40                    ; $B755  mirrored
     sta     temp5                   ; $B757
 
-@loc_B759:
-    lda     temp5                   ; $B759
+@setAttrs:
+    lda     temp5                   ; $B759  the attributes: flip and palette
     ora     temp6                   ; $B75B
     sta     oamBuffer+2,y           ; $B75D
     sta     oamBuffer+6,y           ; $B760
     sta     oamBuffer+10,y          ; $B763
-    lda     drawOffscreen+1         ; $B766
+    lda     drawOffscreen+1         ; $B766  each sprite on screen gets its Y:
     and     #$08                    ; $B768
-    bne     @loc_B771               ; $B76A
-    lda     temp0                   ; $B76C
+    bne     @middle                 ; $B76A
+    lda     temp0                   ; $B76C  left
     sta     oamBuffer,y             ; $B76E
 
-@loc_B771:
+@middle:
     lda     drawOffscreen+1         ; $B771
     and     #$04                    ; $B773
-    bne     @loc_B77C               ; $B775
-    lda     temp0                   ; $B777
+    bne     @right                  ; $B775
+    lda     temp0                   ; $B777  middle
     sta     oamBuffer+4,y           ; $B779
 
-@loc_B77C:
+@right:
     lda     drawOffscreen+1         ; $B77C
     and     #$02                    ; $B77E
-    bne     @loc_B787               ; $B780
-    lda     temp0                   ; $B782
+    bne     @nextRow                ; $B780
+    lda     temp0                   ; $B782  right
     sta     oamBuffer+8,y           ; $B784
 
-@loc_B787:
-    lda     temp0                   ; $B787
+@nextRow:
+    lda     temp0                   ; $B787  the next row 16 lower
     clc                             ; $B789
     adc     #$10                    ; $B78A
     sta     temp0                   ; $B78C
-    lda     temp1                   ; $B78E
+    lda     temp1                   ; $B78E  X: 8 apart
     sta     oamBuffer+3,y           ; $B790
     clc                             ; $B793
     adc     #$08                    ; $B794
@@ -5814,10 +5814,10 @@ Gooma_DrawPart:
     clc                             ; $B799
     adc     #$08                    ; $B79A
     sta     oamBuffer+11,y          ; $B79C
-    inx                             ; $B79F
+    inx                             ; $B79F  the next row's tiles
     inx                             ; $B7A0
     inx                             ; $B7A1
-    tya                             ; $B7A2
+    tya                             ; $B7A2  and sprites
     clc                             ; $B7A3
     adc     #$0C                    ; $B7A4
     tay                             ; $B7A6

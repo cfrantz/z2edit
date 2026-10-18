@@ -2310,22 +2310,22 @@ KingBot_Draw:
     jsr     Obj_ComputeWideOffscreen ; $973C
     ldx     currentObject           ; $973F
     and     #$84                    ; $9741
-    beq     @loc_975A               ; $9743
+    beq     @done                   ; $9743
 ; (code below not executed in the test movies)
-    bpl     @loc_974F               ; $9745
+    bpl     @rightEdge              ; $9745
     ldy     #$F8                    ; $9747  left: hide
     sty     oamBuffer+112           ; $9749
     sty     oamBuffer+116           ; $974C
 
-@loc_974F:
+@rightEdge:
     asl     a                       ; $974F
-    beq     @loc_975A               ; $9750
+    beq     @done                   ; $9750
     ldy     #$F8                    ; $9752  right: hide
     sty     oamBuffer+120           ; $9754
     sty     oamBuffer+124           ; $9757
 ; (end of code not executed in the test movies)
 
-@loc_975A:
+@done:
     pla                             ; $975A  restore X
     sta     objXHi+1,x              ; $975B
     pla                             ; $975D
@@ -3466,27 +3466,27 @@ Projectile_DrawAndCheck_Bank5:
 Projectile_DeathSpark_Bank5:
     dec     objXVelocity+7,x        ; $9C69  count down; at 0, gone
     beq     Projectile_Kill_Bank5   ; $9C6B
-    ldy     objOamOffset+7,x        ; $9C6D
-    lda     objY+7,x                ; $9C6F
+    ldy     objOamOffset+7,x        ; $9C6D  its sprite
+    lda     objY+7,x                ; $9C6F  at its Y,
     sta     temp0                   ; $9C71
-    lda     #$02                    ; $9C73
+    lda     #$02                    ; $9C73  facing left (2),
     sta     temp2                   ; $9C75
-    lsr     a                       ; $9C77
+    lsr     a                       ; $9C77  palette 1,
     sta     temp3                   ; $9C78
-    lsr     a                       ; $9C7A
+    lsr     a                       ; $9C7A  on screen
     sta     drawOffscreen+1         ; $9C7B
-    lda     objX+7,x                ; $9C7D
+    lda     objX+7,x                ; $9C7D  at its screen X (carry set: no borrow)
     sbc     scrollX                 ; $9C7F
     sta     temp1                   ; $9C82
-    lda     objXVelocity+7,x        ; $9C84
-    ldx     #$00                    ; $9C86
+    lda     objXVelocity+7,x        ; $9C84  the first 8 frames:
+    ldx     #$00                    ; $9C86  entry 0, a small spark
     cmp     #$08                    ; $9C88
     bcs     @draw                   ; $9C8A
-    ldx     #$02                    ; $9C8C
+    ldx     #$02                    ; $9C8C  then entry 2, a ring
 
 @draw:
-    jsr     Sprite_DrawPairFromTableKeepX ; $9C8E
-    lda     #$41                    ; $9C91
+    jsr     Sprite_DrawPairFromTableKeepX ; $9C8E  a pair
+    lda     #$41                    ; $9C91  the right sprite mirrored
     sta     oamBuffer - 2,y         ; $9C93
 
 Projectile_DrawAndCheck_Done_Bank5:
@@ -3552,16 +3552,16 @@ Projectile_DrawFlame_Bank5:
     beq     @done                   ; $9CD4
     ldy     projectileTimer,x       ; $9CD6  its last 32 frames:
     cpy     #$20                    ; $9CD9
-    bcs     @loc_9CEB               ; $9CDB
+    bcs     @show                   ; $9CDB
     lda     frameCounter            ; $9CDD  hidden every other 2 frames
     and     #$02                    ; $9CDF
-    beq     @loc_9CEB               ; $9CE1
+    beq     @show                   ; $9CE1
     ldy     objOamOffset+7,x        ; $9CE3
     lda     #$F8                    ; $9CE5
     sta     oamBuffer,y             ; $9CE7
     rts                             ; $9CEA
 
-@loc_9CEB:
+@show:
     ldy     objOamOffset+7,x        ; $9CEB  on the floor: not upside
     lda     oamBuffer+2,y           ; $9CED
     and     #$43                    ; $9CF0  down,
@@ -3980,97 +3980,97 @@ Fokkeru_Ai:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Thunderbird_Draw:
-    lda     enemyHp,x               ; $9EBF
-    ldx     #$29                    ; $9EC1
+    lda     enemyHp,x               ; $9EBF  its face by its hit points:
+    ldx     #$29                    ; $9EC1  $29 in palette 2
     ldy     #$02                    ; $9EC3
-    cmp     #$C0                    ; $9EC5
-    beq     @loc_9ED7               ; $9EC7
-    bcs     @loc_9ED3               ; $9EC9
-    ldx     #$2B                    ; $9ECB
-    lda     frameCounter            ; $9ECD
+    cmp     #$C0                    ; $9EC5  at exactly 192
+    beq     @setFace                ; $9EC7
+    bcs     @open                   ; $9EC9  above: $19
+    ldx     #$2B                    ; $9ECB  below: $2B
+    lda     frameCounter            ; $9ECD  for 8 frames of 32,
     and     #$18                    ; $9ECF
-    beq     @loc_9ED5               ; $9ED1
+    beq     @palette3               ; $9ED1
 
-@loc_9ED3:
-    ldx     #$19                    ; $9ED3
+@open:
+    ldx     #$19                    ; $9ED3  else $19
 
-@loc_9ED5:
-    ldy     #$03                    ; $9ED5
+@palette3:
+    ldy     #$03                    ; $9ED5  palette 3
 
-@loc_9ED7:
+@setFace:
     sty     temp3                   ; $9ED7
-    stx     sramEnemyTiles+47       ; $9ED9
-    ldy     #$50                    ; $9EDC
-    lda     #$02                    ; $9EDE
+    stx     sramEnemyTiles+47       ; $9ED9  the face's tile
+    ldy     #$50                    ; $9EDC  the body from oamBuffer $50:
+    lda     #$02                    ; $9EDE  the left half facing left,
     sta     temp2                   ; $9EE0
-    ldx     #$2C                    ; $9EE2
+    ldx     #$2C                    ; $9EE2  entry $2C, 5 pairs down
     jsr     Sprite_DrawEnemyPair    ; $9EE4
     jsr     Sprite_DrawEnemyPair    ; $9EE7
     jsr     Sprite_DrawEnemyPair    ; $9EEA
     jsr     Sprite_DrawEnemyPair    ; $9EED
     jsr     Sprite_DrawEnemyPairKeepX ; $9EF0
-    lda     drawOffscreen+1         ; $9EF3
+    lda     drawOffscreen+1         ; $9EF3  keep the off-screen bits
     pha                             ; $9EF5
-    asl     a                       ; $9EF6
+    asl     a                       ; $9EF6  (the right half's)
     asl     a                       ; $9EF7
     and     #$0F                    ; $9EF8
     sta     drawOffscreen+1         ; $9EFA
-    lda     objY+1,x                ; $9EFC
+    lda     objY+1,x                ; $9EFC  the right half:
     sta     temp0                   ; $9EFE
-    lda     temp1                   ; $9F00
+    lda     temp1                   ; $9F00  16 pixels right,
     clc                             ; $9F02
     adc     #$10                    ; $9F03
     sta     temp1                   ; $9F05
-    dec     temp2                   ; $9F07
-    ldx     #$2C                    ; $9F09
+    dec     temp2                   ; $9F07  mirrored,
+    ldx     #$2C                    ; $9F09  the same 5 pairs
     jsr     Sprite_DrawEnemyPair    ; $9F0B
     jsr     Sprite_DrawEnemyPair    ; $9F0E
     jsr     Sprite_DrawEnemyPair    ; $9F11
     jsr     Sprite_DrawEnemyPair    ; $9F14
     jsr     Sprite_DrawEnemyPairKeepX ; $9F17
-    lda     frameCounter            ; $9F1A
+    lda     frameCounter            ; $9F1A  the wings: the spacing 12-15,
     and     #$06                    ; $9F1C
     lsr     a                       ; $9F1E
-    adc     #$0C                    ; $9F1F
+    adc     #$0C                    ; $9F1F  flapping
     sta     temp0                   ; $9F21
-    lda     objY+1,x                ; $9F23
+    lda     objY+1,x                ; $9F23  three sprites each side, at oamBuffer $A0:
     sta     oamBuffer+160           ; $9F25
     sta     oamBuffer+172           ; $9F28
-    adc     temp0                   ; $9F2B
+    adc     temp0                   ; $9F2B  the second lower,
     sta     oamBuffer+164           ; $9F2D
     sta     oamBuffer+176           ; $9F30
-    adc     temp0                   ; $9F33
+    adc     temp0                   ; $9F33  the third lower still
     sta     oamBuffer+168           ; $9F35
     sta     oamBuffer+180           ; $9F38
-    lda     drawScreenX+1           ; $9F3B
+    lda     drawScreenX+1           ; $9F3B  the left wing at X - 8,
     sec                             ; $9F3D
     sbc     #$08                    ; $9F3E
     sta     oamBuffer+163           ; $9F40
     sta     oamBuffer+167           ; $9F43
     sta     oamBuffer+171           ; $9F46
-    clc                             ; $9F49
+    clc                             ; $9F49  the right at X + 32
     adc     #$28                    ; $9F4A
     sta     oamBuffer+175           ; $9F4C
     sta     oamBuffer+179           ; $9F4F
     sta     oamBuffer+183           ; $9F52
-    lda     #$0F                    ; $9F55
+    lda     #$0F                    ; $9F55  tiles $0F,
     sta     oamBuffer+161           ; $9F57
     sta     oamBuffer+173           ; $9F5A
-    lda     #$15                    ; $9F5D
+    lda     #$15                    ; $9F5D  $15,
     sta     oamBuffer+165           ; $9F5F
     sta     oamBuffer+177           ; $9F62
-    lda     #$1B                    ; $9F65
+    lda     #$1B                    ; $9F65  $1B
     sta     oamBuffer+169           ; $9F67
     sta     oamBuffer+181           ; $9F6A
-    lda     oamBuffer+82            ; $9F6D
+    lda     oamBuffer+82            ; $9F6D  the body's attributes,
     sta     oamBuffer+162           ; $9F70
     sta     oamBuffer+166           ; $9F73
     sta     oamBuffer+170           ; $9F76
-    ora     #$40                    ; $9F79
+    ora     #$40                    ; $9F79  mirrored on the right
     sta     oamBuffer+174           ; $9F7B
     sta     oamBuffer+178           ; $9F7E
     sta     oamBuffer+182           ; $9F81
-    lda     objX+1,x                ; $9F84
+    lda     objX+1,x                ; $9F84  the wings' off-screen test, from X - 8:
     pha                             ; $9F86
     sec                             ; $9F87
     sbc     #$08                    ; $9F88
@@ -4079,32 +4079,32 @@ Thunderbird_Draw:
     pha                             ; $9F8E
     sbc     #$00                    ; $9F8F
     sta     objXHi+1,x              ; $9F91
-    inx                             ; $9F93
-    ldy     #$01                    ; $9F94
-    jsr     Obj_ComputeWideOffscreen ; $9F96
+    inx                             ; $9F93  its object slot,
+    ldy     #$01                    ; $9F94  enemy category
+    jsr     Obj_ComputeWideOffscreen ; $9F96  32 pixels wide
     ldx     currentObject           ; $9F99
-    and     #$84                    ; $9F9B
-    beq     @loc_9FBA               ; $9F9D
-    bpl     @loc_9FAC               ; $9F9F
-    ldy     #$F8                    ; $9FA1
+    and     #$84                    ; $9F9B  either edge off?
+    beq     @done                   ; $9F9D
+    bpl     @rightWing              ; $9F9F
+    ldy     #$F8                    ; $9FA1  the left wing hidden
     sty     oamBuffer+160           ; $9FA3
     sty     oamBuffer+164           ; $9FA6
     sty     oamBuffer+168           ; $9FA9
 
-@loc_9FAC:
-    asl     a                       ; $9FAC
-    beq     @loc_9FBA               ; $9FAD
-    ldy     #$F8                    ; $9FAF
+@rightWing:
+    asl     a                       ; $9FAC  the right edge off?
+    beq     @done                   ; $9FAD
+    ldy     #$F8                    ; $9FAF  the right wing hidden
     sty     oamBuffer+172           ; $9FB1
     sty     oamBuffer+176           ; $9FB4
     sty     oamBuffer+180           ; $9FB7
 
-@loc_9FBA:
-    pla                             ; $9FBA
+@done:
+    pla                             ; $9FBA  put X back
     sta     objXHi+1,x              ; $9FBB
     pla                             ; $9FBD
     sta     objX+1,x                ; $9FBE
-    pla                             ; $9FC0
+    pla                             ; $9FC0  and the off-screen bits
     sta     drawOffscreen+1         ; $9FC1
 
 ; Fokka_Draw: sword entry by pose 1-4 (entry 0 is the rts): $14, $16, $18,
@@ -4137,94 +4137,94 @@ FokkaDrawYOffsets:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Fokka_Draw:
-    lda     enemyAiVar,x            ; $9FD4
-    ldy     #$00                    ; $9FD7
+    lda     enemyAiVar,x            ; $9FD4  the shield high?
+    ldy     #$00                    ; $9FD7  entry 0,
     cmp     #$00                    ; $9FD9
-    bne     @loc_9FDF               ; $9FDB
-    ldy     #$08                    ; $9FDD
+    bne     @checkAir               ; $9FDB
+    ldy     #$08                    ; $9FDD  low: 8
 
-@loc_9FDF:
-    lda     objCollision+1,x        ; $9FDF
+@checkAir:
+    lda     objCollision+1,x        ; $9FDF  in the air:
     and     #$04                    ; $9FE1
-    bne     @loc_9FEE               ; $9FE3
-    lda     objYVelocity+1,x        ; $9FE5
-    bpl     @loc_A008               ; $9FE8
-    ldy     #$10                    ; $9FEA
-    bne     @loc_A008               ; $9FEC
+    bne     @walking                ; $9FE3
+    lda     objYVelocity+1,x        ; $9FE5  rising?
+    bpl     @draw                   ; $9FE8
+    ldy     #$10                    ; $9FEA  entry $10
+    bne     @draw                   ; $9FEC
 
-@loc_9FEE:
-    lda     objXVelocity+1,x        ; $9FEE
-    beq     @loc_A008               ; $9FF0
-    bpl     @loc_9FF9               ; $9FF2
+@walking:
+    lda     objXVelocity+1,x        ; $9FEE  on the ground, walking:
+    beq     @draw                   ; $9FF0
+    bpl     @speed                  ; $9FF2  |velocity|
     eor     #$FF                    ; $9FF4
     clc                             ; $9FF6
     adc     #$01                    ; $9FF7
 
-@loc_9FF9:
-    cmp     #$10                    ; $9FF9
-    lda     #$08                    ; $9FFB
-    bcc     @loc_A000               ; $9FFD
-    lsr     a                       ; $9FFF
+@speed:
+    cmp     #$10                    ; $9FF9  1 pixel per frame or more:
+    lda     #$08                    ; $9FFB  every 8 frames,
+    bcc     @walkFrame              ; $9FFD
+    lsr     a                       ; $9FFF  or every 4:
 
-@loc_A000:
-    and     frameCounter            ; $A000
-    bne     @loc_A008               ; $A002
-    iny                             ; $A004
+@walkFrame:
+    and     frameCounter            ; $A000  the other walking frame
+    bne     @draw                   ; $A002
+    iny                             ; $A004  (+4)
     iny                             ; $A005
     iny                             ; $A006
     iny                             ; $A007
 
-@loc_A008:
+@draw:
     tya                             ; $A008
-    ldy     objOamOffset+1,x        ; $A009
+    ldy     objOamOffset+1,x        ; $A009  its sprites
     tax                             ; $A00B
-    jsr     Sprite_DrawEnemyPair    ; $A00C
+    jsr     Sprite_DrawEnemyPair    ; $A00C  the body: two pairs
     jsr     Sprite_DrawEnemyPairKeepX ; $A00F
-    lda     objState+1,x            ; $A012
-    beq     @loc_A058               ; $A014
+    lda     objState+1,x            ; $A012  attacking (pose 1-4)?
+    beq     @done                   ; $A014
     sta     temp6                   ; $A016
     tax                             ; $A018
-    lda     temp0                   ; $A019
+    lda     temp0                   ; $A019  the sword's Y
     clc                             ; $A01B
     adc     FokkaDrawYOffsets,x     ; $A01C
     sta     temp0                   ; $A01F
-    lda     temp2                   ; $A021
+    lda     temp2                   ; $A021  facing right:
     cmp     #$01                    ; $A023
-    bne     @loc_A02B               ; $A025
-    inx                             ; $A027
+    bne     @swordX                 ; $A025
+    inx                             ; $A027  the right-facing offsets (+4)
     inx                             ; $A028
     inx                             ; $A029
     inx                             ; $A02A
 
-@loc_A02B:
-    lda     FokkaDrawXOffsets,x     ; $A02B
+@swordX:
+    lda     FokkaDrawXOffsets,x     ; $A02B  the sword's X offset
     ldx     currentObject           ; $A02E
     sty     temp7                   ; $A030
-    ldy     timerFast+TIMER_ENEMY,x ; $A032
+    ldy     timerFast+TIMER_ENEMY,x ; $A032  the thrust's middle (timer 3-12):
     cpy     #$03                    ; $A035
-    bcc     @loc_A03E               ; $A037
+    bcc     @setX                   ; $A037
     cpy     #$0D                    ; $A039
-    bcs     @loc_A03E               ; $A03B
-    asl     a                       ; $A03D
+    bcs     @setX                   ; $A03B
+    asl     a                       ; $A03D  doubled
 
-@loc_A03E:
+@setX:
     clc                             ; $A03E
     adc     temp1                   ; $A03F
     sta     temp1                   ; $A041
     ldy     temp7                   ; $A043
-    ldx     temp6                   ; $A045
+    ldx     temp6                   ; $A045  the low thrust (pose 4):
     cpx     #$04                    ; $A047
-    bne     @loc_A051               ; $A049
+    bne     @swordTiles             ; $A049
     lda     temp3                   ; $A04B
-    ora     #$80                    ; $A04D
+    ora     #$80                    ; $A04D  upside down
     sta     temp3                   ; $A04F
 
-@loc_A051:
-    lda     FokkaDrawTiles,x        ; $A051
+@swordTiles:
+    lda     FokkaDrawTiles,x        ; $A051  the sword's tiles by pose
     tax                             ; $A054
     jmp     Sprite_DrawEnemyPairKeepX ; $A055
 
-@loc_A058:
+@done:
     ldx     currentObject           ; $A058
     rts                             ; $A05A
 
@@ -4238,24 +4238,24 @@ Fokka_Draw:
 ; Status:  confirmed
 ; ---------------------------------------------------------------------------
 Fokkeru_Draw:
-    lda     enemyAiState,x          ; $A05B
+    lda     enemyAiState,x          ; $A05B  its count
     pha                             ; $A05D
-    ldx     #$1C                    ; $A05E
-    and     #$10                    ; $A060
-    beq     @loc_A066               ; $A062
-    ldx     #$24                    ; $A064
+    ldx     #$1C                    ; $A05E  entries $1C/$20,
+    and     #$10                    ; $A060  bit 4:
+    beq     @checkBit3              ; $A062
+    ldx     #$24                    ; $A064  or $24/$28
 
-@loc_A066:
+@checkBit3:
     pla                             ; $A066
-    and     #$08                    ; $A067
-    bne     @loc_A06F               ; $A069
-    inx                             ; $A06B
+    and     #$08                    ; $A067  bit 3 clear:
+    bne     @draw                   ; $A069
+    inx                             ; $A06B  the second of each (+4)
     inx                             ; $A06C
     inx                             ; $A06D
     inx                             ; $A06E
 
-@loc_A06F:
-    jsr     Sprite_DrawEnemyPair    ; $A06F
+@draw:
+    jsr     Sprite_DrawEnemyPair    ; $A06F  two pairs
     jmp     Sprite_DrawEnemyPairKeepX ; $A072
 
 ; ---------------------------------------------------------------------------
@@ -5145,10 +5145,10 @@ Boss_DrawHpBar_Bank5:
 @loop2:
     lda     #$70                    ; $A4FB  empty,
     dey                             ; $A4FD
-    bmi     @loc_A502               ; $A4FE
+    bmi     @setTile                ; $A4FE
     lda     #$6E                    ; $A500  or full
 
-@loc_A502:
+@setTile:
     sta     oamBuffer+193,x         ; $A502
     lda     #$01                    ; $A505  palette 1
     sta     oamBuffer+194,x         ; $A507
